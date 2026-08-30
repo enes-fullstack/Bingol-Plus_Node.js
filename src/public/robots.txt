@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profilim
+Disallow: /api/
+
+Sitemap: https://bingolplus.com/sitemap.xml

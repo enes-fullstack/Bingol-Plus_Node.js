@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İlan Düzenle - Admin | Bingöl Plus', description: 'Bingöl Plus yönetici ilan düzenleme sayfası. İş ilanını güncelleyin.' }) %>
+  <title>İlan Düzenle - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin/ilan-ekle" class="top-link">← Aktif İlanlara Dön</a>
+    <div class="form-card">
+      <h1>İlanı Düzenle</h1>
+      <p class="form-sub"><%= job.title %></p>
+
+      <form action="/admin/ilan-duzenle/<%= job.id %>" method="POST" autocomplete="off">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="title">Başlık</label>
+          <input type="text" id="title" name="title" value="<%= job.title %>" placeholder="örn: Web Geliştirici" required>
+        </div>
+        <div class="form-group">
+          <label for="description">Açıklama</label>
+          <textarea id="description" name="description" placeholder="İlan detayları..." required><%= job.description %></textarea>
+        </div>
+        <div class="form-group">
+          <label for="company">Firma</label>
+          <input type="text" id="company" name="company" value="<%= job.company %>" placeholder="örn: Bingol Tech" required>
+        </div>
+        <div class="form-group">
+          <label for="location">Konum</label>
+          <input type="text" id="location" name="location" value="<%= job.location %>" placeholder="örn: Bingöl Merkez" required>
+        </div>
+        <div class="form-group">
+          <label for="salary">Maaş <span style="color:var(--ink-soft);font-weight:400;">(opsiyonel)</span></label>
+          <input type="text" id="salary" name="salary" value="<%= job.salary || '' %>" placeholder="örn: 25.000 - 35.000 TL">
+        </div>
+        <div class="form-group">
+          <label for="phone">Telefon <span style="color:var(--ink-soft);font-weight:400;">(opsiyonel)</span></label>
+          <input type="text" id="phone" name="phone" value="<%= job.phone || '' %>" placeholder="örn: 0426 212 34 56">
+        </div>
+        <div class="form-group">
+          <label for="type">Çalışma Şekli</label>
+          <select id="type" name="type">
+            <option value="">Seçiniz</option>
+            <option value="Tam Zamanlı" <%= job.type === 'Tam Zamanlı' ? 'selected' : '' %>>Tam Zamanlı</option>
+            <option value="Yarı Zamanlı" <%= job.type === 'Yarı Zamanlı' ? 'selected' : '' %>>Yarı Zamanlı</option>
+            <option value="Sözleşmeli" <%= job.type === 'Sözleşmeli' ? 'selected' : '' %>>Sözleşmeli</option>
+            <option value="Stajyer" <%= job.type === 'Stajyer' ? 'selected' : '' %>>Stajyer</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-solid auth-btn">Değişiklikleri Kaydet</button>
+      </form>
+
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

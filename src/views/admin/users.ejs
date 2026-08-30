@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Kullanıcılar - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — kullanıcı yönetimi.' }) %>
+  <title>Kullanıcılar - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+  .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .search-bar input { flex: 1; padding: 8px 12px; border: 1px solid var(--stone); border-radius: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px; }
+  .search-bar input:focus { outline: 2px solid var(--lake); outline-offset: -1px; }
+  .search-bar button { padding: 8px 16px; background: var(--lake); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .search-bar button:hover { background: var(--lake-deep); }
+  .user-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .user-table th { background: var(--paper-raised); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--stone-line); }
+  .user-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--stone-line); vertical-align: middle; }
+  .user-table tr:last-child td { border-bottom: none; }
+  .user-table .deleted { opacity: .5; text-decoration: line-through; }
+  .user-avatar-sm { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; background: var(--lake); }
+  .user-initial { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--lake); color: #fff; font-size: 13px; font-weight: 600; align-items: center; justify-content: center; margin-right: 8px; vertical-align: middle; }
+  .badge-banned { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; background: #f8d7da; color: #721c24; }
+  .badge-deleted { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; background: #e2e3e5; color: #383d41; }
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 24px; font-size: 13px; }
+  .pagination a { color: var(--lake-deep); font-weight: 500; }
+  .pagination a:hover { text-decoration: underline; }
+  .pagination .disabled { color: var(--ink-soft); pointer-events: none; }
+  .btn-delete { padding: 4px 12px; border: 1px solid #e74c3c; border-radius: 4px; background: #fff; color: #e74c3c; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; }
+  .btn-delete:hover { background: #e74c3c; color: #fff; }
+  .btn-ban { padding: 4px 12px; border: 1px solid var(--clay); border-radius: 4px; background: #fff; color: var(--clay); font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; margin-right: 4px; }
+  .btn-ban:hover { background: var(--clay); color: #fff; }
+  .avatar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+  .avatar-popup { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+  .avatar-popup-inner { background: #fff; border-radius: 12px; padding: 6px; box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  .avatar-popup-inner img { display: block; width: 150px; height: 150px; border-radius: 50%; object-fit: cover; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="admin-head">
+      <h1>Kullanıcılar</h1>
+      <p>Kayıtlı tüm kullanıcılar</p>
+    </div>
+
+    <form class="search-bar" method="get" action="/admin/kullanicilar">
+      <input type="text" name="q" placeholder="Kullanıcı adı veya e-posta ile ara..." value="<%= search %>">
+      <button type="submit">Ara</button>
+      <% if (search) { %>
+        <a href="/admin/kullanicilar" style="display:inline-flex;align-items:center;padding:8px 12px;font-size:13px;color:var(--ink-soft);">Temizle</a>
+      <% } %>
+    </form>
+
+    <% if (users.length > 0) { %>
+      <div class="table-wrap">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Kullanıcı</th>
+            <th>E-posta</th>
+            <th>Konu</th>
+            <th>Kayıt</th>
+            <th>IP</th>
+            <th>Durum</th>
+            <th style="text-align:right;">İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(u) { %>
+            <tr class="<%= u.deletedAt ? 'deleted' : '' %>">
+              <td>
+                <% if (u.profileImage) { %>
+                  <span class="user-avatar-click" data-avatar="<%= u.profileImage %>" style="cursor:pointer;">
+                    <img src="<%= u.profileImage.replace('/upload/','/upload/w_36,h_36,c_fill/') %>" alt="" class="user-avatar-sm" loading="lazy">
+                  </span>
+                <% } else { %>
+                  <span class="user-initial"><%= u.username.charAt(0).toUpperCase() %></span>
+                <% } %>
+                <span><%= u.username %></span>
+              </td>
+              <td><%= u.email %></td>
+              <td style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:13px;"><%= u.getDataValue('postCount') %></td>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;"><%= new Date(u.createdAt).toLocaleDateString("tr-TR") %></td>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;" title="<%= u.ip || '' %>"><%= u.ip || '—' %></td>
+              <td>
+                <% if (u.deletedAt) { %><span class="badge-deleted">Silinmiş</span><% } %>
+                <% if (u.banned) { %><span class="badge-banned">Banlı</span><% } %>
+                <% if (!u.deletedAt && !u.banned) { %><span style="color:var(--moss);font-size:12px;">Aktif</span><% } %>
+              </td>
+              <td style="text-align:right;white-space:nowrap;">
+                <% if (!u.deletedAt) { %>
+                  <form method="post" action="/admin/kullanici-ban/<%= u.id %>" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn-ban"><%= u.banned ? 'Banı Kaldır' : 'Banla' %></button>
+                  </form>
+                  <form method="post" action="/admin/kullanici-sil/<%= u.id %>" style="display:inline;" data-username="<%= u.username %>">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn-delete">Sil</button>
+                  </form>
+                <% } else { %>
+                  <span style="color:var(--ink-soft);font-size:12px;">—</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% if (page > 1) { %>
+            <a href="/admin/kullanicilar?page=<%= page-1 %><%= search ? '&q='+encodeURIComponent(search) : '' %>">← Önceki</a>
+          <% } else { %>
+            <span class="disabled">← Önceki</span>
+          <% } %>
+          <span>Sayfa <%= page %> / <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="/admin/kullanicilar?page=<%= page+1 %><%= search ? '&q='+encodeURIComponent(search) : '' %>">Sonraki →</a>
+          <% } else { %>
+            <span class="disabled">Sonraki →</span>
+          <% } %>
+        </div>
+      <% } %>
+
+    <% } else { %>
+      <div class="empty" style="text-align:center;padding:40px 0;">
+        <p><%= search ? 'Aramanızla eşleşen kullanıcı bulunamadı.' : 'Henüz kayıtlı kullanıcı bulunmuyor.' %></p>
+      </div>
+    <% } %>
+  </div>
+
+  <div id="avatar-overlay" class="avatar-overlay" style="display:none;"></div>
+  <div id="avatar-popup" class="avatar-popup" style="display:none;">
+    <div class="avatar-popup-inner">
+      <img id="avatar-popup-img" src="" alt="" loading="lazy">
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

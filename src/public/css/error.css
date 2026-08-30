@@ -1,0 +1,27 @@
+.error-wrap {
+  min-height: calc(100vh - 68px - 90px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+.error-code {
+  font-family: 'Bitter', serif;
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lake-deep);
+  opacity: .3;
+}
+.error-wrap h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+.error-wrap p {
+  color: var(--ink-soft);
+  font-size: 15px;
+  margin: 8px 0 28px;
+}

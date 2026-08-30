@@ -1,0 +1,93 @@
+<div id="feed-list">
+<% if (posts.length > 0) { %>
+  <% posts.forEach(function(post) { %>
+    <article class="post-card" style="margin-bottom:20px;">
+      <span class="pin"></span>
+      <h2 class="post-title"><%= post.title %></h2>
+      <div class="post-meta">
+        <span class="cat-tag"><%= post.PostCategory.name %></span>
+        <span>·</span>
+        <span class="post-author" data-avatar="<%= post.User.profileImage || '' %>">
+          <% var pa = avatarMap[post.User.id]; %>
+          <% if (pa) { %>
+            <img src="<%= pa %>" alt="" class="feed-avatar" loading="lazy">
+          <% } else { %>
+            <span class="feed-avatar-letter"><%= post.User.username.charAt(0).toUpperCase() %></span>
+          <% } %>
+          <strong><%= post.User.username %></strong>
+        </span>
+        <span>·</span>
+        <span class="mono"><%= new Date(post.createdAt).toLocaleDateString("tr-TR") %></span>
+      </div>
+      <div class="post-content"><%= post.content %></div>
+
+      <div class="actions" style="margin-top:16px;">
+        <button class="like-btn action-btn" data-post-id="<%= post.id %>">
+          <svg class="like-icon" width="18" height="18" viewBox="0 0 24 24" fill="<%= (userLikedMap && userLikedMap[post.id]) ? 'var(--lake-deep)' : 'none' %>" stroke="var(--lake-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span class="like-count"><%= post.likes || 0 %></span>
+        </button>
+
+        <button class="reply-btn action-btn" data-post-id="<%= post.id %>">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>Yanıtlar<%= replyCounts[post.id] > 0 ? ' (' + replyCounts[post.id] + ')' : '' %></span>
+        </button>
+      </div>
+
+      <div class="reply-section" style="display:none;">
+        <% if (userId) { %>
+          <div class="reply-form">
+            <textarea class="reply-textarea" rows="3" placeholder="Yanıtınızı yazın..."></textarea>
+            <button class="btn btn-solid reply-submit-btn" data-post-id="<%= post.id %>">Gönder</button>
+          </div>
+        <% } else { %>
+          <div class="guest-note">
+            <a href="/giris-yap">Giriş yap</a> veya <a href="/kayit-ol">kaydol</a> ve yanıt yaz.
+          </div>
+        <% } %>
+
+        <div class="replies-list">
+          <% var postReplies = repliesByPost[post.id]; %>
+          <% if (postReplies && postReplies.length > 0) { %>
+            <% postReplies.forEach(function(reply) { %>
+              <div class="reply-item">
+                <% var ra = avatarMap[reply.User.id]; %>
+                <% if (ra) { %>
+                  <img src="<%= ra %>" alt="" class="reply-avatar-img" loading="lazy" data-avatar="<%= reply.User.profileImage || '' %>">
+                <% } else { %>
+                  <div class="reply-avatar"><%= reply.User.username.charAt(0).toUpperCase() %></div>
+                <% } %>
+                <div class="reply-body">
+                  <div class="reply-head"><strong><%= reply.User.username %></strong> &middot; <%= new Date(reply.createdAt).toLocaleDateString("tr-TR") %></div>
+                  <div class="reply-text"><%= reply.content %></div>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p class="no-replies-msg">Henüz yanıt yok.</p>
+          <% } %>
+        </div>
+
+        <% if (replyCounts[post.id] > 3) { %>
+          <button class="load-more-btn" data-post-id="<%= post.id %>" data-offset="3">Daha fazla yanıt göster (<%= replyCounts[post.id] - 3 %>)</button>
+        <% } %>
+      </div>
+    </article>
+  <% }) %>
+<% } else { %>
+  <div class="empty">
+    <p><%= kategori ? 'Bu kategoride henüz gönderi bulunmuyor.' : 'Henüz gönderi bulunmuyor.' %></p>
+  </div>
+<% } %>
+</div>
+<div id="sentinel"></div>
+
+<div id="avatar-overlay" class="avatar-overlay" style="display:none;"></div>
+<div id="avatar-popup" class="avatar-popup" style="display:none;">
+  <div class="avatar-popup-inner">
+    <img id="avatar-popup-img" src="" alt="" loading="lazy">
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Giriş Yap - Bingöl Plus', description: 'Bingöl Plus\'a giriş yapın. İş ilanlarını görüntüleyin ve forum tartışmalarına katılın.' }) %>
+  <title>Giriş Yap - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <div class="auth-wrap">
+    <%- include('../partials/flash') %>
+    <div class="auth-card">
+      <h1>Giriş Yap</h1>
+      <p class="auth-sub">Hesabına giriş yap, ilanları kaydet, foruma katıl.</p>
+
+      <form action="/giris-yap" method="POST" autocomplete="off">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="username">Kullanıcı Adı</label>
+          <input type="text" id="username" name="username" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.username) ? locals.flash.oldInput.username : '' %>" required>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.username) { %><div class="field-error"><%= locals.flash.errors.username %></div><% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Şifre</label>
+          <div class="password-field">
+            <input type="password" id="password" name="password" required>
+            <button type="button" class="password-toggle" aria-label="Şifreyi göster" tabindex="-1">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.53 9.53a3 3 0 1 0 4.24 4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.password) { %><div class="field-error"><%= locals.flash.errors.password %></div><% } %>
+        </div>
+
+        <button type="submit" class="btn btn-solid auth-btn">Giriş Yap</button>
+      </form>
+
+      <div class="auth-alt">
+        Hesabın yok mu? <a href="/kayit-ol">Kayıt Ol</a> &middot; <a href="/sifremi-unuttum">Şifremi Unuttum</a>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

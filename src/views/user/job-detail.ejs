@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İş İlanları - Bingöl Plus', description: (((job.description || '').replace(/<[^>]*>/g, '').substring(0, 155).trim() || job.title) + ' - Bingöl Plus\'ta iş ilanı') }) %>
+  <title><%= job.title %> - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/detail.css">
+</head>
+<body data-user-logged-in="<%= userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar') %>
+
+  <div class="detail-wrap">
+    <%- include('../partials/flash') %>
+    <a href="/ilanlar" class="back-link">← Tüm İlanlar</a>
+
+    <div class="detail-card">
+      <h1><%= job.title %></h1>
+      <div class="detail-company"><%= job.company %> · <%= job.location %></div>
+
+      <div class="detail-grid">
+        <div class="detail-field">
+          <label>Maaş</label>
+          <span><%= job.salary ? job.salary + ' TL' : 'Belirtilmemiş' %></span>
+        </div>
+        <div class="detail-field">
+          <label>Telefon</label>
+          <span class="mono"><%= job.phone || 'Belirtilmemiş' %></span>
+        </div>
+        <div class="detail-field">
+          <label>Çalışma Şekli</label>
+          <span><%= job.type || 'Belirtilmemiş' %></span>
+        </div>
+        <div class="detail-field">
+          <label>Yayınlanma Tarihi</label>
+          <span><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h2>İş Tanımı</h2>
+        <p><%= job.description %></p>
+      </div>
+
+      <div class="detail-actions">
+        <a href="tel:<%= job.phone %>" class="btn btn-solid" style="flex:1; justify-content:center;">Telefonla Ara</a>
+        <button class="btn <%= isSaved ? 'btn-solid' : 'btn-ghost' %> save-btn-detail<%= isSaved ? ' saved' : '' %>" data-job-id="<%= job.id %>" style="flex:1; justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="<%= isSaved ? '#fff' : 'none' %>" stroke="<%= isSaved ? '#fff' : 'var(--ink)' %>" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>
+          <span class="save-text"><%= isSaved ? 'Kaydedildi' : 'Kaydet' %></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Akış - Forum | Bingöl Plus', description: (kategori ? kategori + ' kategorisindeki' : 'Tüm') + ' forum gönderileri — Bingöl Plus akış sayfası.' }) %>
+  <title><%= kategori ? kategori + ' - ' : '' %>Akış - Forum | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/detail.css">
+  <style>
+  .loading { text-align: center; padding: 24px; color: var(--ink-soft); font-size: 13.5px; }
+  .end-note { text-align: center; padding: 24px; color: var(--ink-soft); font-size: 13px; border-top: 1px solid var(--stone-line); }
+  .feed-search-form { display: flex; gap: 10px; margin-bottom: 24px; }
+  .feed-search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Work Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .feed-search-input:focus {
+  border-color: var(--lake);
+  box-shadow: 0 0 0 3px rgba(27, 111, 118, 0.15);
+  outline: none;
+  background: #fff;
+  }
+  .feed-search-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--paper-raised);
+  border: 1px solid var(--stone-line);
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  }
+  @media (max-width: 480px) {
+  .feed-search-form { flex-direction: column; }
+  }
+  </style>
+</head>
+
+<body data-user-logged-in="<%= userId ? 'true' : 'false' %>" data-has-more="<%= typeof hasMore !== 'undefined' ? hasMore : false %>" data-initial-offset="<%= typeof initialOffset !== 'undefined' ? initialOffset : 0 %>" data-kategori="<%= slug || kategori || '' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'forum' }) %>
+
+  <main class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb" style="margin-top:18px;">
+      <a href="/forum">Forum</a>
+      <span class="sep">/</span>
+      <a href="/forum/akis">Akış</a>
+      <% if (kategori) { %><span class="sep">/</span><span class="mono"><%= kategori %></span><% } %>
+    </div>
+    <a href="/forum" class="top-link" style="margin-bottom:18px;">← Foruma Dön</a>
+
+    <div class="page-head" style="margin-bottom:24px;">
+      <h1>Forum Akışı<%= kategori ? ' — ' + kategori : '' %></h1>
+      <p style="color:var(--ink-soft);font-size:14px;">Tüm gönderiler en yeni en üstte<%= kategori ? ' (' + kategori + ')' : '' %></p>
+    </div>
+
+    <% if (userId) { %>
+      <details class="create-card" style="margin-bottom:24px;">
+        <summary class="create-summary">+ Yeni Konu Aç</summary>
+        <form action="/forum/konu-ac?redirect=/forum/akis<%= slug ? '/' + slug : '' %>" method="POST" autocomplete="off" style="margin-top:14px;" novalidate>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <input type="text" id="feed-title" name="title" placeholder="Konu başlığı" minlength="5" maxlength="120" required>
+            <div class="field-error" id="feed-title-error" style="display:none;"></div>
+          </div>
+          <div class="form-group">
+            <select id="feed-category" name="categoryId">
+              <% categories.forEach(function(c) { %>
+                <option value="<%= c.id %>"><%= c.name %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div class="form-group">
+            <textarea id="feed-content" name="content" placeholder="Düşüncelerinizi yazın..." rows="4" minlength="20" maxlength="10000" required></textarea>
+            <div class="field-error" id="feed-content-error" style="display:none;"></div>
+          </div>
+          <button type="submit" class="btn btn-solid" style="justify-content:center;">Konuyu Yayınla</button>
+        </form>
+      </details>
+    <% } else { %>
+      <div class="guest-note" style="margin-bottom:24px;">
+        <a href="/giris-yap">Giriş yap</a> veya <a href="/kayit-ol">kaydol</a> ve yeni konu aç.
+      </div>
+    <% } %>
+
+    <form id="feed-search-form" class="feed-search-form" autocomplete="off" novalidate>
+      <input type="text" id="feed-search-input" class="feed-search-input" maxlength="100" placeholder="Konu başlığı veya içerikte ara...">
+      <button type="submit" class="btn btn-solid">Ara</button>
+    </form>
+    <div id="feed-search-status" class="feed-search-status" style="display:none;">
+      <span id="feed-search-message"></span>
+      <button type="button" id="feed-search-clear" class="btn btn-ghost btn-sm">Aramayı Temizle</button>
+    </div>
+
+    <%- include('../partials/feed-posts') %>
+
+  </main>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

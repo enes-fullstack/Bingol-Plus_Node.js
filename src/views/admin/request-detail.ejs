@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Talep İncele - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — ilan talebi inceleme.' }) %>
+  <title>Talep İncele - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin/talepler" class="top-link">← Taleplere Dön</a>
+    <div class="admin-head">
+      <h1><%= request.title %></h1>
+      <p><%= request.company %> · <%= request.location %></p>
+    </div>
+
+    <div class="detail-grid" style="margin-bottom:24px;">
+      <div><strong>Gönderen:</strong> <%= request.User.username %></div>
+      <div><strong>Tarih:</strong> <span class="mono"><%= new Date(request.createdAt).toLocaleDateString("tr-TR") %></span></div>
+      <div><strong>Maaş:</strong> <%= request.salary || 'Belirtilmemiş' %></div>
+      <div><strong>Telefon:</strong> <%= request.phone || 'Belirtilmemiş' %></div>
+      <div><strong>Çalışma Şekli:</strong> <%= request.type || 'Belirtilmemiş' %></div>
+    </div>
+
+    <div class="detail-section" style="margin-bottom:24px;">
+      <h2>Açıklama</h2>
+      <p><%= request.description %></p>
+    </div>
+
+    <div class="action-btns" style="display:flex;gap:12px;">
+      <form action="/admin/talep-onayla/<%= request.id %>" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-solid" style="justify-content:center;padding:10px 28px;">Onayla ve Yayınla</button>
+      </form>
+      <form action="/admin/talep-reddet/<%= request.id %>" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-ghost" style="justify-content:center;padding:10px 28px;color:var(--clay);border-color:var(--clay);">Reddet</button>
+      </form>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

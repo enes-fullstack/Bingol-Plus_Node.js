@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İlan Ekle - Admin | Bingöl Plus', description: 'Bingöl Plus yönetici ilan ekleme sayfası. Yeni iş ilanı oluşturun.' }) %>
+  <title>İlan Ekle - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="form-card">
+      <h1>Yeni İş İlanı Ekle</h1>
+      <p class="form-sub">Tüm alanları doldurup yayınlayın.</p>
+
+      <form action="/admin/ilan-ekle" method="POST" autocomplete="off">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="title">Başlık</label>
+          <input type="text" id="title" name="title" placeholder="örn: Web Geliştirici" required>
+        </div>
+        <div class="form-group">
+          <label for="description">Açıklama</label>
+          <textarea id="description" name="description" placeholder="İlan detayları..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="company">Firma</label>
+          <input type="text" id="company" name="company" placeholder="örn: Bingol Tech" required>
+        </div>
+        <div class="form-group">
+          <label for="location">Konum</label>
+          <input type="text" id="location" name="location" placeholder="örn: Bingöl Merkez" required>
+        </div>
+        <div class="form-group">
+          <label for="salary">Maaş <span style="color:var(--ink-soft);font-weight:400;">(opsiyonel)</span></label>
+          <input type="text" id="salary" name="salary" placeholder="örn: 25.000 - 35.000 TL">
+        </div>
+        <div class="form-group">
+          <label for="phone">Telefon <span style="color:var(--ink-soft);font-weight:400;">(opsiyonel)</span></label>
+          <input type="text" id="phone" name="phone" placeholder="örn: 0426 212 34 56">
+        </div>
+        <div class="form-group">
+          <label for="type">Çalışma Şekli</label>
+          <select id="type" name="type">
+            <option value="">Seçiniz</option>
+            <option value="Tam Zamanlı">Tam Zamanlı</option>
+            <option value="Yarı Zamanlı">Yarı Zamanlı</option>
+            <option value="Sözleşmeli">Sözleşmeli</option>
+            <option value="Stajyer">Stajyer</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-solid auth-btn">İlanı Yayınla</button>
+      </form>
+
+    </div>
+
+    <div class="admin-card-2" style="margin-top:24px;">
+      <div class="admin-head" style="margin-bottom:16px;">
+        <h1 style="font-size:20px;">Aktif İlanlar</h1>
+        <p style="margin:4px 0 0;font-size:14px;"><%= jobs.length %> ilan yayında</p>
+      </div>
+
+      <% if (jobs.length > 0) { %>
+        <div class="job-list">
+          <% jobs.forEach(function(j) { %>
+            <div class="job-card">
+              <div class="job-info">
+                <strong><%= j.title %></strong>
+                <span style="font-size:13px;color:var(--ink-soft);"><%= j.company %> · <%= j.location %></span>
+                <span style="font-size:12px;color:var(--ink-soft);"><%= new Date(j.createdAt).toLocaleDateString("tr-TR") %></span>
+              </div>
+              <div class="job-actions">
+                <a href="/admin/ilan-duzenle/<%= j.id %>" class="btn btn-solid" style="padding:6px 14px;font-size:13px;">Düzenle</a>
+                <form action="/admin/ilan-sil/<%= j.id %>" method="POST" class="job-delete-form">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-ghost job-delete-btn" style="padding:6px 14px;font-size:13px;color:var(--clay);">Sil</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty" style="text-align:center;padding:24px 0;">
+          <p>Aktif ilan bulunmuyor.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

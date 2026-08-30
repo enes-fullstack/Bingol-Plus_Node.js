@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Kategoriler - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — forum kategorileri yönetimi.' }) %>
+  <title>Kategoriler - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+  .cat-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .cat-table th { background: var(--paper-raised); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--stone-line); }
+  .cat-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--stone-line); vertical-align: middle; }
+  .cat-table tr:last-child td { border-bottom: none; }
+  .cat-slug { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+  .add-form { display: flex; gap: 8px; margin-bottom: 24px; }
+  .add-form input { flex: 1; padding: 8px 12px; border: 1px solid var(--stone); border-radius: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px; }
+  .add-form input:focus { outline: 2px solid var(--lake); outline-offset: -1px; }
+  .add-form button { padding: 8px 16px; background: var(--lake); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .add-form button:hover { background: var(--lake-deep); }
+  .btn-delete { padding: 4px 12px; border: 1px solid #e74c3c; border-radius: 4px; background: #fff; color: #e74c3c; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; }
+  .btn-delete:hover { background: #e74c3c; color: #fff; }
+  .btn-delete:disabled { opacity: .4; cursor: not-allowed; background: #fff; color: #e74c3c; }
+  .badge-count { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: var(--paper-raised); color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="admin-head">
+      <h1>Kategoriler</h1>
+      <p>Forum kategorilerini yönetin</p>
+    </div>
+
+    <form class="add-form" method="post" action="/admin/kategori-ekle">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <input type="text" name="name" placeholder="Yeni kategori adı..." maxlength="50" required>
+      <button type="submit">Ekle</button>
+    </form>
+
+    <% if (categories.length > 0) { %>
+      <div class="table-wrap">
+      <table class="cat-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">ID</th>
+            <th>Kategori</th>
+            <th>Slug</th>
+            <th style="text-align:center;">Konu Sayısı</th>
+            <th style="text-align:right;">İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% categories.forEach(function(c) { %>
+            <tr>
+              <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);"><%= c.id %></td>
+              <td><strong><%= c.name %></strong></td>
+              <td class="cat-slug"><%= c.slug %></td>
+              <td style="text-align:center;"><span class="badge-count"><%= c.getDataValue('postCount') %></span></td>
+              <td style="text-align:right;">
+                <% if (Number(c.getDataValue('postCount')) > 0) { %>
+                  <button class="btn-delete" disabled title="Bu kategoriye ait konular bulunuyor. Önce konuları taşıyın veya silin.">Sil</button>
+                <% } else { %>
+                  <form method="post" action="/admin/kategori-sil/<%= c.id %>" style="display:inline;" onsubmit="return confirm('«<%= c.name %>» kategorisini silmek istediğinize emin misiniz?');">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn-delete">Sil</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      </div>
+    <% } else { %>
+      <div class="empty" style="text-align:center;padding:40px 0;">
+        <p>Henüz hiç kategori bulunmuyor.</p>
+      </div>
+    <% } %>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

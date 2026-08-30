@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İletişim - Bingöl Plus', description: 'Bingöl Plus iletişim sayfası. Soru, öneri ve görüşleriniz için bize ulaşın.' }) %>
+  <title>İletişim - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/contact.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'iletisim' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <span class="mono">İletişim</span>
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--lake)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="M22 7l-10 7L2 7" />
+        </svg>
+      </div>
+      <h1>İletişim</h1>
+      <p class="contact-desc">Bize aşağıdaki e-posta adresinden ulaşabilirsiniz. Soru, öneri ve şikayetlerinizi bekliyoruz.</p>
+      <a href="mailto:bingolmeydani@gmail.com" class="contact-email">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2" />
+          <path d="M22 7l-10 7L2 7" />
+        </svg>
+        bingolmeydani@gmail.com
+      </a>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

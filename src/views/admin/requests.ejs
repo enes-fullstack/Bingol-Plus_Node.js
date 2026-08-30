@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İlan Talepleri - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — onay bekleyen ilan talepleri.' }) %>
+  <title>İlan Talepleri - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="admin-head">
+      <h1>İlan Ekleme Talepleri</h1>
+      <p>Kullanıcılar tarafından gönderilen, onay bekleyen ilan talepleri</p>
+    </div>
+
+    <% if (requests.length > 0) { %>
+      <div class="request-list">
+        <% requests.forEach(function(r) { %>
+          <div class="request-card">
+            <div class="request-info">
+              <strong><%= r.title %></strong>
+              <span style="font-size:13px;color:var(--ink-soft);"><%= r.company %> · <%= r.location %></span>
+              <span style="font-size:12px;color:var(--ink-soft);">Gönderen: <%= r.User.username %> · <%= new Date(r.createdAt).toLocaleDateString("tr-TR") %></span>
+            </div>
+            <a href="/admin/talep/<%= r.id %>" class="btn btn-solid" style="padding:6px 14px;font-size:13px;">İncele</a>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="empty" style="text-align:center;padding:40px 0;">
+        <p>Bekleyen ilan talebi bulunmuyor.</p>
+      </div>
+    <% } %>
+
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

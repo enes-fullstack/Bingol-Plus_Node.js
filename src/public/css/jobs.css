@@ -1,0 +1,179 @@
+/* ---------- CRUMB ---------- */
+.crumb {
+  font-size: 13px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 28px;
+}
+
+.crumb a:hover { color: var(--lake-deep); }
+
+/* ---------- PAGE HEAD ---------- */
+.page-head { margin-top: 14px; margin-bottom: 28px; }
+
+.page-head h1 { font-size: 28px; font-weight: 700; }
+
+.page-head p {
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  margin-top: 6px;
+}
+
+/* ---------- JOB LIST ---------- */
+main { padding-bottom: 64px; }
+
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.job-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  padding: 22px 24px 20px;
+  box-shadow: var(--shadow);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(36, 38, 32, 0.12);
+}
+
+.pin {
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--clay);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.job-title {
+  font-size: 18.5px;
+  font-weight: 600;
+  padding-right: 44px;
+}
+
+.job-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.job-meta span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.job-meta svg { flex: none; opacity: .8; }
+
+.job-meta .salary {
+  color: var(--moss);
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+
+.job-desc {
+  font-size: 14.5px;
+  color: var(--ink);
+  line-height: 1.65;
+  margin-top: 14px;
+}
+
+.job-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+  padding-right: 44px;
+  margin-top: 16px;
+  border-top: 1px solid var(--stone-line);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.job-phone {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--paper-raised);
+  border: 1px solid var(--stone-line);
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.save-btn {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  border: 1px solid var(--stone);
+  background: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.save-btn:hover { border-color: var(--lake); }
+
+.save-btn svg {
+  stroke: var(--ink-soft);
+  fill: none;
+  transition: stroke .15s ease, fill .15s ease;
+}
+
+.save-btn.saved {
+  background: var(--lake);
+  border-color: var(--lake);
+}
+
+.save-btn.saved svg { stroke: #fff; fill: #fff; }
+
+/* ---------- EMPTY STATE ---------- */
+.empty {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--ink-soft);
+  background: var(--paper-raised);
+  border: 1px dashed var(--stone);
+  border-radius: var(--radius);
+}
+
+.empty p { margin: 0; font-size: 14.5px; }
+
+.empty .btn { margin-top: 18px; }
+
+/* ---------- BACK LINKS ---------- */
+.back-links {
+  margin-top: 34px;
+  display: flex;
+  gap: 18px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.back-links a:hover { color: var(--lake-deep); }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 24px; }
+  .job-card { padding: 18px 18px 16px; }
+}

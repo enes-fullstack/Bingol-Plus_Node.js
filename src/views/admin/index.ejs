@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Admin Paneli - Bingöl Plus', description: 'Bingöl Plus yönetici paneli. İlan, kullanıcı ve forum yönetimi.' }) %>
+  <title>Admin Paneli - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/" class="top-link">← Ana Sayfaya Dön</a>
+    <div class="admin-head">
+      <h1>Admin Paneli</h1>
+      <p>Platform istatistikleri ve yönetim</p>
+    </div>
+
+    <div class="admin-stats">
+      <div class="stat-box">
+        <div class="number"><%= userCount %></div>
+        <div class="label">Kullanıcı</div>
+      </div>
+      <div class="stat-box">
+        <div class="number"><%= jobCount %></div>
+        <div class="label">İş İlanı</div>
+      </div>
+      <div class="stat-box">
+        <div class="number"><%= postCount %></div>
+        <div class="label">Forum Konusu</div>
+      </div>
+      <div class="stat-box">
+        <div class="number"><%= requestCount %></div>
+        <div class="label">Bekleyen Talep</div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h2>İş İlanları</h2>
+      <a href="/admin/ilan-ekle">İlan Ekle</a>
+    </div>
+
+    <div class="admin-card">
+      <h2>İlan Ekleme Talepleri</h2>
+      <a href="/admin/talepler">Talepleri Görüntüle (<%= requestCount %> bekleyen)</a>
+    </div>
+
+    <div class="admin-card">
+      <h2>Forum</h2>
+      <a href="/forum">Konuları Yönet (silme işlemi forum sayfasında)</a>
+    </div>
+
+    <div class="admin-card">
+      <h2>Kategoriler</h2>
+      <a href="/admin/kategoriler">Forum kategorilerini yönet</a>
+    </div>
+
+    <div class="admin-card">
+      <h2>Kullanıcılar</h2>
+      <a href="/admin/kullanicilar">Kullanıcıları yönet (<%= userCount %> kayıtlı)</a>
+    </div>
+
+    <div class="admin-card">
+      <h2>Sistem Logları</h2>
+      <a href="/admin/loglar">Tüm logları görüntüle</a>
+    </div>
+
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

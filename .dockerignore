@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+.env.example
+certs
+test
+.git
+scripts
+vitest.workspace.ts
+.vscode
+NOTE.md
+TODO.md

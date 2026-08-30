@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'İş İlanları - Bingöl Plus', description: 'Bingöl\'deki güncel iş ilanları. Yerel firmaların iş fırsatlarını görüntüleyin ve başvurun.' }) %>
+  <title>İş İlanları - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/jobs.css">
+</head>
+
+<body data-user-logged-in="<%= userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'ilanlar' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <span class="mono">İlanlar</span>
+    </div>
+    <a href="/" class="top-link">← Ana Sayfaya Dön</a>
+
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;">
+      <div>
+        <h1>İş İlanları</h1>
+        <p>Bingöl'deki güncel iş fırsatları</p>
+      </div>
+      <a href="<%= userId ? '/ilanlar/ilan-ekle' : '/giris-yap' %>" class="btn btn-solid" style="padding:8px 18px;">+ İlan Ekle</a>
+    </div>
+
+    <main>
+      <% if (jobs && jobs.length > 0) { %>
+      <div class="jobs-list">
+        <% jobs.forEach(job => { %>
+        <div class="job-card">
+          <span class="pin"></span>
+          <div class="job-title"><a href="/ilanlar/<%= job.id %>/<%= slugify(job.title) %>" style="color:inherit;"><%= job.title %></a></div>
+
+          <div class="job-meta">
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" /></svg><%= job.company %></span>
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg><%= job.location %></span>
+          </div>
+
+          <div class="job-desc"><%= job.description %></div>
+
+          <div class="job-footer">
+            <span class="mono"><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <a href="/ilanlar/<%= job.id %>/<%= slugify(job.title) %>" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">İlanı İncele</a>
+            </div>
+          </div>
+
+          <button class="save-btn<%= savedJobIds && savedJobIds.includes(job.id) ? ' saved' : '' %>" data-job-id="<%= job.id %>" aria-label="İlanı kaydet">
+            <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>
+          </button>
+        </div>
+        <% }) %>
+      </div>
+      <% } else { %>
+      <div class="empty">
+        <p>Henüz iş ilanı bulunmuyor.</p>
+        <p>Yeni bir ilan eklendiğinde burada listelenecek.</p>
+      </div>
+      <% } %>
+
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

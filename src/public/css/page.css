@@ -1,0 +1,93 @@
+.crumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+.crumb a:hover {
+  color: var(--lake-deep);
+}
+.crumb span {
+  color: var(--stone);
+}
+
+.page-card {
+  max-width: 720px;
+  margin: 24px auto 56px;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 48px 44px;
+}
+.page-card h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.page-card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--lake-deep);
+}
+.page-card p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin: 0 0 16px;
+}
+.page-card p:last-child {
+  margin-bottom: 0;
+}
+.page-card ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+.page-card ul:last-child {
+  margin-bottom: 0;
+}
+.page-card li {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.page-card li strong {
+  color: var(--ink);
+}
+.page-card section {
+  padding: 26px 0;
+  border-top: 1px solid var(--stone-line);
+}
+.page-card section:first-of-type {
+  border-top: none;
+}
+.page-card a {
+  color: var(--lake-deep);
+  font-weight: 500;
+}
+.page-card a:hover {
+  text-decoration: underline;
+}
+.page-card code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--paper);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--clay);
+}
+
+.page-icon {
+  margin-bottom: 16px;
+}
+
+.page-update {
+  font-size: 12.5px;
+  color: var(--stone);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 8px;
+}

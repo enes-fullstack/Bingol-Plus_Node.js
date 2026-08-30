@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Kayıt Ol - Bingöl Plus', description: 'Bingöl Plus\'a kayıt olun. İş ilanlarına başvurun ve forumda yeni konular açın.' }) %>
+  <title>Kayıt Ol - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <div class="auth-wrap">
+    <%- include('../partials/flash') %>
+    <div class="auth-card">
+      <h1>Kayıt Ol</h1>
+      <p class="auth-sub">Bingöl Plus'a katıl, ilanları takip et, konu aç.</p>
+
+      <form action="/kayit-ol" method="POST" autocomplete="off">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="email">E-posta</label>
+          <input type="email" id="email" name="email" placeholder="ornek@email.com" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.email) ? locals.flash.oldInput.email : '' %>" required>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.email) { %><div class="field-error"><%= locals.flash.errors.email %></div><% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="username">Kullanıcı Adı</label>
+          <input type="text" id="username" name="username" placeholder="kullaniciadi" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.username) ? locals.flash.oldInput.username : '' %>" required>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.username) { %><div class="field-error"><%= locals.flash.errors.username %></div><% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Şifre</label>
+          <div class="password-field">
+            <input type="password" id="password" name="password" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" aria-label="Şifreyi göster" tabindex="-1">
+              <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.53 9.53a3 3 0 1 0 4.24 4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.password) { %><div class="field-error"><%= locals.flash.errors.password %></div><% } %>
+        </div>
+        
+        <button type="submit" class="btn btn-solid auth-btn">Kayıt Ol</button>
+      </form>
+
+      <p style="font-size:12px; color:var(--ink-soft); text-align:center; margin-top:12px; line-height:1.5;">
+        Kayıt olarak <a href="/gizlilik-politikasi" style="color:var(--lake);">Gizlilik Politikası'nı</a>, <a href="/kullanim-sartlari" style="color:var(--lake);">Kullanım Şartları'nı</a> ve <a href="/cerez-politikasi" style="color:var(--lake);">Çerez Politikası'nı</a> kabul etmiş olursunuz.
+      </p>
+
+      <div class="auth-alt">
+        Zaten hesabın var mı? <a href="/giris-yap">Giriş Yap</a>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

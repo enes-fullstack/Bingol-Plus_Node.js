@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Loglar - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — sistem logları.' }) %>
+  <title>Loglar - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .filter-btn { padding: 5px 12px; border: 1px solid var(--stone); border-radius: 20px; font-size: 12px; font-weight: 500; background: #fff; color: var(--ink); cursor: pointer; text-decoration: none; transition: .15s; }
+  .filter-btn:hover { border-color: var(--lake); }
+  .filter-btn.active { background: var(--lake); color: #fff; border-color: var(--lake); }
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 24px; font-size: 13px; }
+  .pagination a { color: var(--lake-deep); font-weight: 500; }
+  .pagination a:hover { text-decoration: underline; }
+  .pagination .disabled { color: var(--ink-soft); pointer-events: none; }
+  .log-count { font-size: 13px; color: var(--ink-soft); margin-bottom: 16px; }
+  @media (max-width: 640px) { .log-table td:nth-child(2), .log-table th:nth-child(2) { display: none; } }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="admin-head">
+      <h1>Sistem Logları</h1>
+      <p>Uygulama genelindeki tüm log kayıtları</p>
+    </div>
+
+    <div class="filter-bar">
+      <a href="/admin/loglar" class="filter-btn <%= !filterType ? 'active' : '' %>">Tümü</a>
+      <% ["success","info","warning","error","critical"].forEach(function(t) { %>
+        <a href="/admin/loglar?type=<%= t %><%= page > 1 ? '&page='+page : '' %>" class="filter-btn <%= filterType === t ? 'active' : '' %>"><%= t %></a>
+      <% }) %>
+    </div>
+
+    <div class="log-count">Toplam <%= logs.length > 0 ? '—' : '0' %> kayıt</div>
+
+    <% if (logs.length > 0) { %>
+      <div class="table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Tür</th>
+            <th>Mesaj</th>
+            <th style="text-align:right;">Zaman</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(l) { %>
+            <tr>
+              <td><span class="log-type log-type-<%= l.type %>"><%= l.type %></span></td>
+              <td class="log-message"><%= l.message %></td>
+              <td style="text-align:right;"><span class="log-time"><%= new Date(l.createdAt).toLocaleString("tr-TR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }) %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+      </div>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <% if (page > 1) { %>
+            <a href="/admin/loglar?page=<%= page-1 %><%= filterType ? '&type='+filterType : '' %>">← Önceki</a>
+          <% } else { %>
+            <span class="disabled">← Önceki</span>
+          <% } %>
+          <span>Sayfa <%= page %> / <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="/admin/loglar?page=<%= page+1 %><%= filterType ? '&type='+filterType : '' %>">Sonraki →</a>
+          <% } else { %>
+            <span class="disabled">Sonraki →</span>
+          <% } %>
+        </div>
+      <% } %>
+
+    <% } else { %>
+      <div class="empty" style="text-align:center;padding:40px 0;">
+        <p>Bu kritere uygun log kaydı bulunamadı.</p>
+      </div>
+    <% } %>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

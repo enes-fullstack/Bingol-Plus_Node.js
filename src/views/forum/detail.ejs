@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Forum - Bingöl Plus', description: ((post.content || '').replace(/<[^>]*>/g, '').substring(0, 155).trim() || 'Bingöl Plus forum konusu — ' + post.title) }) %>
+  <title><%= post.title %> - Forum | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/detail.css">
+</head>
+
+<body data-user-logged-in="<%= userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'forum' }) %>
+
+  <main class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb" style="margin-top:18px;">
+      <a href="/forum">Forum</a>
+      <span class="sep">/</span>
+      <span class="mono"><%= post.PostCategory.name %></span>
+    </div>
+    <a href="/forum/akis" class="top-link" style="margin-bottom:18px;">← Foruma Dön</a>
+
+    <article class="post-card">
+      <span class="pin"></span>
+      <h1 class="post-title"><%= post.title %></h1>
+      <div class="post-meta">
+        <span class="cat-tag"><%= post.PostCategory.name %></span>
+        <span>·</span>
+        <span class="post-author" data-avatar="<%= post.User.profileImage || '' %>">
+          <% var pa = avatarMap[post.User.id]; if (pa) { %>
+            <img src="<%= pa %>" alt="" class="feed-avatar" loading="lazy">
+          <% } else { %>
+            <span class="feed-avatar-letter"><%= post.User.username.charAt(0).toUpperCase() %></span>
+          <% } %>
+          <strong><%= post.User.username %></strong>
+        </span>
+        <span>·</span>
+        <span class="mono"><%= new Date(post.createdAt).toLocaleDateString("tr-TR") %></span>
+      </div>
+      <div class="post-content"><%= post.content %></div>
+
+      <div class="actions">
+        <button id="likeBtn" class="action-btn" data-post-id="<%= post.id %>" data-liked="<%= userLiked ? 'true' : 'false' %>">
+          <svg id="likeIcon" width="18" height="18" viewBox="0 0 24 24" fill="<%= userLiked ? 'var(--lake-deep)' : 'none' %>" stroke="var(--lake-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          <span id="likeCount"><%= post.likes || 0 %></span>
+        </button>
+
+        <button id="repliesToggleBtn" class="action-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span id="repliesToggleLabel">Yanıtlar (<%= totalReplies %>)</span>
+        </button>
+      </div>
+
+      <div id="repliesSection" style="display:none;">
+        <% if (userId) { %>
+        <div id="replyForm" class="reply-form">
+          <textarea id="replyContent" rows="3" placeholder="Yanıtınızı yazın..."></textarea>
+          <button class="btn btn-solid" id="replySubmitBtn">Gönder</button>
+        </div>
+        <% } else { %>
+        <p class="guest-note"><a href="/giris-yap">Giriş yap</a> veya <a href="/kayit-ol">kayıt ol</a>.</p>
+        <% } %>
+
+        <div id="repliesList">
+          <% if (replies.length > 0) { %>
+          <% replies.forEach(r => { %>
+          <div class="reply-item">
+            <% var ra = avatarMap[r.User.id]; %>
+            <div class="reply-avatar" data-avatar="<%= r.User.profileImage || '' %>">
+              <% if (ra) { %>
+                <img src="<%= ra %>" alt="" class="reply-avatar-img" style="width:34px;height:34px;" loading="lazy">
+              <% } else { %>
+                <%= r.User.username.charAt(0).toUpperCase() %>
+              <% } %>
+            </div>
+            <div class="reply-body">
+              <div class="reply-head"><strong><%= r.User.username %></strong> &middot; <%= new Date(r.createdAt).toLocaleDateString("tr-TR") %></div>
+              <div class="reply-text"><%= r.content %></div>
+            </div>
+          </div>
+          <% }) %>
+          <% } else { %>
+          <p id="noRepliesMsg">Henüz yanıt yok.</p>
+          <% } %>
+        </div>
+
+        <% if (totalReplies > 10) { %>
+        <button id="loadMoreBtn">Daha fazla yanıt</button>
+        <% } %>
+      </div>
+
+    </article>
+  </main>
+
+  <div id="avatar-overlay" class="avatar-overlay" style="display:none;"></div>
+  <div id="avatar-popup" class="avatar-popup" style="display:none;">
+    <div class="avatar-popup-inner">
+      <img id="avatar-popup-img" src="" alt="" loading="lazy">
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

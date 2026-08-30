@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'İlan Ekle - Bingöl Plus', description: 'Bingöl Plus\'a iş ilanı ekleyin. İş verenler için ücretsiz ilan verme sayfası.' }) %>
+  <title>İlan Ekle - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'ilanlar' }) %>
+
+  <div class="auth-wrap">
+    <%- include('../partials/flash') %>
+    <div class="auth-card auth-card-wide">
+      <a href="/ilanlar" class="top-link" style="margin-bottom:16px;">← İlanlara Dön</a>
+      <% if (pendingRequest) { %>
+        <div style="text-align:center;padding:20px 0;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--lake)" stroke-width="1.5" style="margin-bottom:12px;">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 6v6l4 2" />
+          </svg>
+          <h2 style="font-size:18px;margin:0 0 6px;">İlanınız İnceleniyor</h2>
+          <p style="font-size:14px;color:var(--ink-soft);margin:0;">Daha önce gönderdiğiniz ilan talebi admin onayı bekliyor. Onaylandığında yayınlanacaktır.</p>
+        </div>
+      <% } else { %>
+      <h1>İlan Ekle</h1>
+      <p class="auth-sub">İş ilanınızı girin, admin onayından sonra yayınlanacaktır.</p>
+
+      <form id="job-form" action="/ilanlar/ilan-ekle" method="POST" autocomplete="off" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="title">İlan Başlığı <span style="color:var(--clay);">*</span></label>
+          <input type="text" id="title" name="title" placeholder="Örn: Satış Danışmanı" data-required="true" value="<%= locals.flash && locals.flash.errors ? '' : '' %>">
+          <div class="field-error" id="title-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.title) ? locals.flash.errors.title : '' %></div>
+        </div>
+
+        <div class="form-group">
+          <label for="company">Şirket Adı <span style="color:var(--clay);">*</span></label>
+          <input type="text" id="company" name="company" placeholder="Örn: Bingöl Ticaret A.Ş." data-required="true">
+          <div class="field-error" id="company-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.company) ? locals.flash.errors.company : '' %></div>
+        </div>
+
+        <div class="form-group">
+          <label for="location">İl/İlçe <span style="color:var(--clay);">*</span></label>
+          <input type="text" id="location" name="location" placeholder="Örn: Bingöl Merkez" data-required="true">
+          <div class="field-error" id="location-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.location) ? locals.flash.errors.location : '' %></div>
+        </div>
+
+        <div class="form-group">
+          <label for="phone">İletişim (Telefon Numarası)</label>
+          <input type="text" id="phone" name="phone" placeholder="Örn: 0500 000 00 00" data-type="phone">
+          <div class="field-error" id="phone-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.phone) ? locals.flash.errors.phone : '' %></div>
+        </div>
+
+        <div class="form-group">
+          <label for="type">Çalışma Şekli</label>
+          <select id="type" name="type">
+            <option value="">Seçiniz</option>
+            <option value="Tam Zamanlı">Tam Zamanlı</option>
+            <option value="Yarı Zamanlı">Yarı Zamanlı</option>
+            <option value="Staj">Staj</option>
+            <option value="Proje Bazlı">Proje Bazlı</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="salary">Maaş</label>
+          <input type="text" id="salary" name="salary" placeholder="Örn: 25.000 - 30.000">
+          <div class="field-error" id="salary-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.salary) ? locals.flash.errors.salary : '' %></div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">İş Açıklaması <span style="color:var(--clay);">*</span></label>
+          <textarea id="description" name="description" placeholder="İşin detaylarını, gereklilikleri ve firma hakkında bilgileri yazın..." rows="6" data-required="true"></textarea>
+          <div class="field-error" id="description-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.description) ? locals.flash.errors.description : '' %></div>
+        </div>
+
+        <button type="submit" class="btn btn-solid auth-btn">İlan Talebi Gönder</button>
+      </form>
+
+      <script src="/js/app.js"></script>
+      <% } %>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Çerez Politikası - Bingöl Plus', description: 'Bingöl Plus çerez politikası. Platformumuzda kullanılan çerezler ve veri toplama hakkında detaylı bilgi.' }) %>
+  <title>Çerez Politikası - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/page.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <span class="mono">Çerez Politikası</span>
+    </div>
+
+    <div class="page-card">
+      <div class="page-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--lake)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="4" />
+          <line x1="12" y1="2" x2="12" y2="6" />
+          <line x1="12" y1="18" x2="12" y2="22" />
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76" />
+          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07" />
+          <line x1="2" y1="12" x2="6" y2="12" />
+          <line x1="18" y1="12" x2="22" y2="12" />
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
+          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+        </svg>
+      </div>
+      <h1>Çerez Politikası</h1>
+      <p class="page-update">Son güncelleme: 2026</p>
+
+      <section>
+        <h2>Çerez Nedir?</h2>
+        <p>Çerezler (cookies), bir web sitesini ziyaret ettiğinizde tarayıcınıza kaydedilen küçük metin dosyalarıdır. Bingöl Plus olarak yalnızca zorunlu çerezleri kullanıyoruz.</p>
+      </section>
+
+      <section>
+        <h2>Kullandığımız Çerezler</h2>
+        <ul>
+          <li>
+            <strong>Oturum Çerezi (<code>connect.sid</code>):</strong>
+            Giriş yaptıktan sonra oturumunuzu sürdürebilmek için kullanılır. Bu çerez olmadan platformda giriş yapmanız mümkün değildir.
+            <ul>
+              <li>Süre: Oturum boyunca (tarayıcı kapanana kadar)</li>
+              <li>HTTP-only: Evet (JavaScript ile erişilemez)</li>
+              <li>SameSite: Lax</li>
+              <li>Güvenli: Yalnızca HTTPS bağlantılarda (production ortamında)</li>
+            </ul>
+          </li>
+          <li>
+            <strong>CSRF Token:</strong>
+            Form gönderimlerinde güvenlik amacıyla her sayfada yeniden oluşturulur. Saldırganların sizin adınıza işlem yapmasını engeller.
+            <ul>
+              <li>Süre: Sayfa bazında (her yeni sayfada yenilenir)</li>
+              <li>Amaç: Cross-Site Request Forgery saldırılarına karşı koruma</li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Kullanmadığımız Çerez Türleri</h2>
+        <p>Bingöl Plus'ta aşağıdaki çerez türleri kullanılmaz:</p>
+        <ul>
+          <li><strong>Analitik çerezleri:</strong> Google Analytics veya benzeri bir takip aracı kullanmıyoruz.</li>
+          <li><strong>Reklam çerezleri:</strong> Platformumuzda reklam yayınlanmaz, bu nedenle reklam amaçlı çerez kullanılmaz.</li>
+          <li><strong>Üçüncü taraf çerezleri:</strong> Google Fonts ve Cloudinary gibi hizmetler kendi bağlantıları üzerinden içerik sunar ancak tarayıcınızda kalıcı çerez bırakmaz.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Çerezleri Kontrol Etme</h2>
+        <p>Kullanıcılarımızın gizliliğine saygı duyuyoruz. Kullandığımız çerezler yalnızca platformun temel işlevlerini yerine getirebilmesi için zorunludur. Kullanıcıların çerezleri devre dışı bırakma hakkı vardır ancak bu durumda platformun bazı özellikleri (özellikle giriş yapma) çalışmayabilir.</p>
+        <p>Tarayıcı ayarlarından çerezleri kontrol edebilir veya silebilirsiniz:</p>
+        <ul>
+          <li>Chrome: Ayarlar → Gizlilik ve Güvenlik → Çerezler ve diğer site verileri</li>
+          <li>Firefox: Seçenekler → Gizlilik ve Güvenlik → Çerezler ve Site Verileri</li>
+          <li>Safari: Tercihler → Gizlilik → Çerezler</li>
+          <li>Edge: Ayarlar → Çerezler ve Site İzinleri</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Gizlilik Politikası</h2>
+        <p>Kişisel verilerinizin nasıl işlendiği hakkında daha fazla bilgi için <a href="/gizlilik-politikasi">Gizlilik Politikası</a> sayfamızı ziyaret edebilirsiniz.</p>
+      </section>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

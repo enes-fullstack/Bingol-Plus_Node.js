@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Konu Aç - Forum | Bingöl Plus', description: 'Bingöl Plus forumunda yeni konu açın. Bingöl hakkında tartışmalara katılın.' }) %>
+  <title>Konu Aç - Forum | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'forum' }) %>
+
+  <div class="auth-wrap">
+    <%- include('../partials/flash') %>
+    <div class="auth-card auth-card-wide">
+      <a href="/forum" class="top-link" style="margin-bottom:16px;">← Foruma Dön</a>
+      <h1>Yeni Konu Aç</h1>
+      <p class="auth-sub">Forumda yeni bir tartışma başlat.</p>
+
+      <form action="/forum/konu-ac" method="POST" autocomplete="off" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="form-group">
+          <label for="title">Başlık <span class="char-hint" id="title-hint">(<%= ((locals.flash && locals.flash.oldInput && locals.flash.oldInput.title) ? locals.flash.oldInput.title.length : 0) %>/120)</span></label>
+          <input type="text" id="title" name="title" placeholder="Konu başlığı" minlength="5" maxlength="120" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.title) ? locals.flash.oldInput.title : '' %>" required>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.title) { %><div class="field-error"><%= locals.flash.errors.title %></div><% } %>
+        </div>
+
+        <div class="form-group">
+          <label for="categoryId">Kategori</label>
+          <select id="categoryId" name="categoryId">
+            <% var selectedCatId = (locals.flash && locals.flash.oldInput && locals.flash.oldInput.categoryId) ? Number(locals.flash.oldInput.categoryId) : (categories.length > 0 ? categories[0].id : ''); %>
+            <% categories.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= c.id === selectedCatId ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="content">İçerik <span class="char-hint" id="content-hint">(<%= ((locals.flash && locals.flash.oldInput && locals.flash.oldInput.content) ? locals.flash.oldInput.content.length : 0) %>/10000)</span></label>
+          <textarea id="content" name="content" placeholder="Düşüncelerinizi yazın..." minlength="20" maxlength="10000" required><%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.content) ? locals.flash.oldInput.content : '' %></textarea>
+          <% if (locals.flash && locals.flash.errors && locals.flash.errors.content) { %><div class="field-error"><%= locals.flash.errors.content %></div><% } %>
+        </div>
+
+        <button type="submit" class="btn btn-solid auth-btn">Konuyu Yayınla</button>
+      </form>
+
+      <script src="/js/app.js"></script>
+
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

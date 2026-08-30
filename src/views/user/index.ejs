@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Bingöl Plus — İş İlanları & Forum', description: 'Bingöl Plus — Bingöl\'de iş ilanları ve forum. Yerel iş fırsatlarını keşfedin, toplulukla tartışın.' }) %>
+  <title>Bingöl Plus — İş İlanları & Forum</title>
+  <link rel="stylesheet" href="/css/detail.css">
+  <style>
+  .loading { text-align: center; padding: 24px; color: var(--ink-soft); font-size: 13.5px; }
+  .end-note { text-align: center; padding: 24px; color: var(--ink-soft); font-size: 13px; border-top: 1px solid var(--stone-line); }
+  .feed-search-form { display: flex; gap: 10px; margin-bottom: 20px; }
+  .home-search { margin-top: 0; margin-bottom: 20px; padding: 14px; background: #fff; border: 1px solid var(--stone-line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .feed-search-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--stone);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Work Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .feed-search-input:focus {
+  border-color: var(--lake);
+  box-shadow: 0 0 0 3px rgba(27, 111, 118, 0.15);
+  outline: none;
+  background: #fff;
+  }
+  @media (max-width: 480px) {
+  .feed-search-form { flex-direction: column; }
+  }
+  </style>
+</head>
+
+<body data-user-logged-in="<%= (typeof userId !== 'undefined' && userId) ? 'true' : (username ? 'true' : 'false') %>" data-has-more="<%= typeof hasMore !== 'undefined' ? hasMore : false %>" data-initial-offset="<%= typeof initialOffset !== 'undefined' ? initialOffset : 0 %>" data-kategori="<%= (typeof slug !== 'undefined' && slug) ? slug : (typeof kategori !== 'undefined' ? kategori : '') %>">
+
+  <%- include('../partials/navbar', { currentPage: 'anasayfa' }) %>
+
+  <%- include('../partials/flash') %>
+
+  <main>
+    <div class="wrap">
+      <div class="page-head">
+        <div>
+          <h1>Bingöl'de neler konuşuluyor?</h1>
+          <p>Topluluğun son konularına göz at</p>
+        </div>
+        <a href="/forum/konu-ac" class="btn btn-solid">+ Konu Aç</a>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <div class="cat-filter">
+        <a href="/forum/akis" class="cat-pill">
+          <span class="cat-left"><span class="cat-dot" style="background:var(--paper); border:1px solid var(--stone);"></span>Tüm konular</span>
+          <span class="cat-count"><%= postCount %></span>
+        </a>
+        <% categories.forEach(cat => { %>
+          <% const count = categoryCountMap[cat.name] || 0; %>
+          <a href="/forum/akis/<%= slugify(cat.name) %>" class="cat-pill">
+            <span class="cat-left"><span class="cat-dot" style="background:var(--lake)"></span><%= cat.name %></span>
+            <span class="cat-count"><%= count %></span>
+          </a>
+        <% }) %>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="sec-head">
+          <div>
+            <h2>Son Konular</h2>
+            <p class="sec-sub">En son eklenen konular</p>
+          </div>
+          <a href="/forum/akis" class="see-all">Tümünü gör →</a>
+        </div>
+        <form action="/forum/akis" method="GET" class="feed-search-form home-search" autocomplete="off">
+          <input type="text" name="q" class="feed-search-input" maxlength="100" placeholder="🔍 Konularda ara... (örn: Bingöl'de iş)" required>
+          <button type="submit" class="btn btn-solid">Ara</button>
+        </form>
+        <%- include('../partials/feed-posts') %>
+      </div>
+    </section>
+
+  </main>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

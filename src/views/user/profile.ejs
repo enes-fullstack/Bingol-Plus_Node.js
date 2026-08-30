@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Profilim - Bingöl Plus', description: 'Bingöl Plus profil sayfası. Kaydettiğiniz ilanları görüntüleyin ve profil bilgilerinizi düzenleyin.' }) %>
+  <title>Profilim - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/profile.css">
+</head>
+
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'profilim' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <span class="mono">Profilim</span>
+    </div>
+    <a href="/" class="top-link">← Ana Sayfaya Dön</a>
+
+    <main>
+      <div class="profile-head">
+        <% if (user.profileImage) { %>
+          <span class="avatar-wrap" data-avatar="<%= user.profileImage %>">
+            <img src="<%= user.profileImage.replace('/upload/', '/upload/w_64,h_64,c_fill,f_auto,q_auto/') %>" alt="" class="avatar-img" loading="lazy">
+          </span>
+        <% } else { %>
+          <div class="avatar-big"><%= user.username.charAt(0).toUpperCase() %></div>
+        <% } %>
+        <div style="flex:1;">
+          <h1><%= user.username %></h1>
+          <div class="email"><%= user.email %></div>
+        </div>
+        <form id="avatar-form" action="/profilim/resim-yukle" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label for="avatar-input" class="btn btn-ghost btn-sm" style="cursor:pointer;">Profil Resmi Seç</label>
+          <input type="file" id="avatar-input" name="profileImage" accept="image/jpeg,image/png,image/webp" style="display:none;">
+          <div id="avatar-preview" style="display:none;"></div>
+          <button type="submit" id="avatar-submit" class="btn btn-solid btn-sm" style="display:none;">Yükle</button>
+          <div id="avatar-error" class="field-error" style="text-align:center;"></div>
+        </form>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <label>Kayıt Tarihi</label>
+          <span><%= new Date(user.createdAt).toLocaleDateString("tr-TR", { year: "numeric", month: "long", day: "numeric" }) %></span>
+        </div>
+        <div class="stat-card">
+          <label>Açılan Konu Sayısı</label>
+          <span class="mono"><%= postCount %></span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>İlanlarım</h2>
+          <span class="count">(<%= myJobs.length %>)</span>
+        </div>
+
+        <% if (myJobs.length > 0) { %>
+        <div class="jobs-list" id="myJobs">
+          <% myJobs.forEach(job => { %>
+          <div class="job-card">
+            <span class="pin"></span>
+            <div class="job-title"><a href="/ilanlar/<%= job.id %>/<%= slugify(job.title) %>" style="color:inherit;"><%= job.title %></a></div>
+            <div class="job-meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" />
+                </svg><%= job.company %></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg><%= job.location %></span>
+              <% if (job.salary) { %><span class="salary"><%= job.salary %></span><% } %>
+            </div>
+            <div class="job-desc"><%= job.description %></div>
+            <div class="job-footer">
+              <span class="mono"><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
+              <div style="display:flex;gap:8px;margin-left:auto;">
+                <a href="/ilanlar/duzenle/<%= job.id %>" class="btn btn-ghost btn-sm">Düzenle</a>
+                <form method="POST" action="/ilanlar/sil/<%= job.id %>" data-title="<%= job.title %>" style="display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn btn-ghost btn-sm job-delete-form" style="color:var(--clay);">Sil</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="empty">Henüz yayınladığınız ilan bulunmuyor. <a href="/ilanlar/ilan-ekle">İlan ekleyin</a>.</div>
+        <% } %>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>Kaydedilen İlanlar</h2>
+          <span class="count" id="savedCount">(<%= savedJobs.length %>)</span>
+        </div>
+
+        <% if (savedJobs.length > 0) { %>
+        <div class="jobs-list">
+          <% savedJobs.forEach(sj => { %>
+          <div class="job-card">
+            <span class="pin"></span>
+            <div class="job-title"><%= sj.Job.title %></div>
+            <div class="job-meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" />
+                </svg><%= sj.Job.company %></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg><%= sj.Job.location %></span>
+              <% if (sj.Job.salary) { %><span class="salary"><%= sj.Job.salary %></span><% } %>
+            </div>
+            <div class="job-desc"><%= sj.Job.description %></div>
+            <div class="job-footer">
+              <span class="mono"><%= new Date(sj.createdAt).toLocaleDateString("tr-TR") %></span>
+              <a href="/ilanlar/<%= sj.jobId %>/<%= slugify(sj.Job.title) %>" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">İlanı İncele</a>
+            </div>
+            <button class="save-btn" data-job-id="<%= sj.jobId %>" aria-label="Kaydı kaldır">
+              <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M6 3h12v18l-6-4-6 4V3z" />
+              </svg>
+            </button>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="empty">Henüz kaydedilmiş ilan bulunmuyor. <a href="/ilanlar">İlanlara göz at</a>.</div>
+        <% } %>
+      </div>
+
+    </main>
+  </div>
+
+  <div id="avatar-overlay" class="avatar-overlay" style="display:none;"></div>
+  <div id="avatar-popup" class="avatar-popup" style="display:none;">
+    <div class="avatar-popup-inner">
+      <img id="avatar-popup-img" src="" alt="" loading="lazy">
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

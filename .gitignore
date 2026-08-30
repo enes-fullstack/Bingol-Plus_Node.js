@@ -1,0 +1,11 @@
+node_modules
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+.env.docker
+certs
+dist
+NOTE.md
+TODO.md

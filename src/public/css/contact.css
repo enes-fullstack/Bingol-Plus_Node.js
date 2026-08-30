@@ -1,0 +1,45 @@
+.contact-card {
+  max-width: 520px;
+  margin: 40px auto;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 48px 36px;
+  text-align: center;
+}
+
+.contact-icon {
+  margin-bottom: 20px;
+}
+
+.contact-card h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.contact-desc {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.contact-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: var(--lake);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background .15s ease;
+}
+
+.contact-email:hover {
+  background: var(--lake-deep);
+}

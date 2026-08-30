@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Hakkımızda - Bingöl Plus', description: 'Bingöl Plus hakkında. Bingöl\'ün yerel iş ilanları ve forum platformunun hikayesi, misyonu ve vizyonu.' }) %>
+  <title>Hakkımızda - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/page.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <span class="mono">Hakkımızda</span>
+    </div>
+
+    <div class="page-card">
+      <div class="page-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--lake)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      </div>
+      <h1>Hakkımızda</h1>
+
+      <section>
+        <h2>Bingöl Plus Nedir?</h2>
+        <p>Bingöl Plus, Bingöl'de yaşayan insanların iş bulmasını, işverenlerin nitelikli çalışanlara ulaşmasını ve topluluğun fikir alışverişi yapabileceği bir forum ortamında bir araya gelmesini sağlayan yerel bir platformdur. 2026 yılında, Bingöl'ün dijital bir meydana ihtiyacı olduğu fikrinden yola çıkarak kuruldu.</p>
+      </section>
+
+      <section>
+        <h2>Misyonumuz</h2>
+        <p>Bingöl'deki iş gücü piyasasını canlandırmak, yerel işletmelerin görünürlüğünü artırmak ve Bingöllülerin günlük hayatta karşılaştıkları konuları özgürce tartışabilecekleri samimi bir dijital alan sunmak. Platformumuz tamamen Bingöl'e odaklıdır — her ilan, her konu doğrudan şehrimizle bağlantılıdır.</p>
+      </section>
+
+      <section>
+        <h2>Vizyonumuz</h2>
+        <p>Bingöl'ün en çok kullanılan yerel platformu olmanın ötesinde, Türkiye'deki diğer şehirlere de örnek olacak bir dijital yerellik modeli oluşturmak. Teknolojiyi kullanarak şehir ekonomisine ve sosyal hayatına katkı sağlamak.</p>
+      </section>
+
+      <section>
+        <h2>Neler Sunuyoruz?</h2>
+        <ul>
+          <li><strong>İş İlanları:</strong> Bingöl'deki güncel iş fırsatlarını keşfedin. İlanları kaydedin, detaylarını inceleyin.</li>
+          <li><strong>İlan Verme:</strong> İşverenler ilanlarını gönderebilir, admin onayından sonra yayınlanır.</li>
+          <li><strong>Forum:</strong> Kategorilere ayrılmış konularda tartışın, fikir paylaşın. Beğeni ve yorum sistemiyle etkileşime geçin.</li>
+          <li><strong>Profil Yönetimi:</strong> Kişisel profilinizde kaydettiğiniz ilanları görün, avatar yükleyin.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Güvenlik ve Gizlilik</h2>
+        <p>Kullanıcı verilerinin güvenliği bizim için önceliklidir. Oturum bilgileri şifrelenir, şifreler bcrypt ile hashlenir, CSRF saldırılarına karşı HMAC tabanlı koruma kullanılır. Detaylı bilgi için <a href="/gizlilik-politikasi">Gizlilik Politikası</a> ve <a href="/cerez-politikasi">Çerez Politikası</a> sayfalarını inceleyebilirsiniz.</p>
+      </section>
+
+      <section>
+        <h2>İletişim</h2>
+        <p>Soru, öneri ve görüşleriniz için bize <a href="/iletisim">iletişim sayfasından</a> ulaşabilirsiniz.</p>
+      </section>
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

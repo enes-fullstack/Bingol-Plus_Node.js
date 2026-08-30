@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Sayfa Bulunamadı - Bingöl Plus', description: 'Aradığınız sayfa bulunamadı. Bingöl Plus anasayfasına dönerek gezinmeye devam edebilirsiniz.' }) %>
+  <title>Sayfa Bulunamadı - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/error.css">
+</head>
+<body>
+
+  <%- include('../partials/navbar') %>
+
+  <div class="error-wrap">
+    <%- include('../partials/flash') %>
+    <div class="error-code">404</div>
+    <h1>Sayfa Bulunamadı</h1>
+    <p>Aradığınız sayfa mevcut değil veya taşınmış olabilir.</p>
+    <a href="/" class="btn btn-solid" style="padding:10px 24px;">Ana Sayfaya Dön</a>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

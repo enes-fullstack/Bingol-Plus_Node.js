@@ -1,0 +1,47 @@
+<%
+  const page = typeof currentPage !== 'undefined' ? currentPage : '';
+%>
+<header>
+  <nav class="wrap">
+    <a href="/" class="logo">
+      <img src="/images/small-logo.webp" alt="Bingöl Plus logosu" width="32" height="32" loading="lazy" decoding="async" class="logo-img">
+      <span class="logo-text">Bingöl <span>Plus</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="/" class="<%= page === 'anasayfa' ? 'current' : '' %>">Anasayfa</a>
+      <a href="/ilanlar" class="<%= page === 'ilanlar' ? 'current' : '' %>">İş İlanları</a>
+      <a href="/forum/akis" class="<%= page === 'forum' ? 'current' : '' %>">Forum</a>
+      <a href="/iletisim" class="<%= page === 'iletisim' ? 'current' : '' %>">İletişim</a>
+      <% if (typeof userId !== 'undefined' && userId) { %><a href="/profilim" class="<%= page === 'profilim' ? 'current' : '' %>">Profilim</a><% } %>
+    </div>
+    <div class="nav-actions">
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Koyu moda geç" title="Temayı değiştir">
+        <svg class="theme-icon icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+        <svg class="theme-icon icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <% if (typeof userId !== 'undefined' && userId) { %>
+        <span class="nav-user"><%= username %></span>
+        <a href="/cikis-yap" class="btn btn-ghost btn-sm nav-desktop-auth">Çıkış Yap</a>
+      <% } else { %>
+        <a href="/giris-yap" class="btn btn-ghost btn-sm nav-desktop-auth">Giriş Yap</a>
+        <a href="/kayit-ol" class="btn btn-solid btn-sm nav-desktop-auth">Kayıt Ol</a>
+      <% } %>
+      <button class="nav-toggle" aria-label="Menüyü aç/kapa" aria-expanded="false">
+        <span class="nav-hamburger"></span>
+      </button>
+    </div>
+    <div class="mobile-menu">
+      <a href="/" class="<%= page === 'anasayfa' ? 'current' : '' %>">Anasayfa</a>
+      <a href="/ilanlar" class="<%= page === 'ilanlar' ? 'current' : '' %>">İş İlanları</a>
+      <a href="/forum/akis" class="<%= page === 'forum' ? 'current' : '' %>">Forum</a>
+      <a href="/iletisim" class="<%= page === 'iletisim' ? 'current' : '' %>">İletişim</a>
+      <% if (typeof userId !== 'undefined' && userId) { %>
+        <a href="/profilim" class="<%= page === 'profilim' ? 'current' : '' %>">Profilim</a>
+        <a href="/cikis-yap">Çıkış Yap</a>
+      <% } else { %>
+        <a href="/giris-yap">Giriş Yap</a>
+        <a href="/kayit-ol">Kayıt Ol</a>
+      <% } %>
+    </div>
+  </nav>
+</header>
