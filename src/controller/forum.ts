@@ -207,14 +207,30 @@ export const getAkisData = async (req: Request, where: Record<string, unknown> =
 };
 
 export const feedGet = async (req: Request, res: Response): Promise<void> => {
-    const [data, categoriesRaw] = await Promise.all([
+    const [data, categoriesRaw, categoryCountRows, postCount] = await Promise.all([
         getAkisData(req),
-        PostCategory.findAll({ order: [["id", "ASC"]] })
+        PostCategory.findAll({ order: [["id", "ASC"]] }),
+        Post.findAll({
+            attributes: [
+                "categoryId",
+                [sequelize.fn("COUNT", sequelize.col("Post.id")), "count"]
+            ],
+            group: ["categoryId"]
+        } as any),
+        Post.count()
     ]);
     const categories: any = categoriesRaw;
     const uniIdx = categories.findIndex((c: any) => c.name === "Üniversite");
     if (uniIdx > -1) { const [uni] = categories.splice(uniIdx, 1); categories.splice(2, 0, uni); }
-    res.status(200).render("forum/feed", { ...data, kategori: null, slug: null, userId: req.session.userId || null, categories });
+
+    const countByCategoryId: Record<number, number> = {};
+    (categoryCountRows as any[]).forEach(r => {
+        countByCategoryId[Number((r as any).categoryId)] = Number((r as any).getDataValue("count"));
+    });
+    const categoryCountMap: Record<string, number> = {};
+    categories.forEach((c: any) => { categoryCountMap[c.name] = countByCategoryId[c.id] || 0; });
+
+    res.status(200).render("forum/feed", { ...data, kategori: null, slug: null, userId: req.session.userId || null, categories, categoryCountMap, postCount });
 };
 
 export const feedCategoryGet = async (req: Request, res: Response): Promise<void> => {
@@ -222,14 +238,30 @@ export const feedCategoryGet = async (req: Request, res: Response): Promise<void
     const category = await PostCategory.findOne({ where: { slug } });
     if (!category) { res.status(404).render("user/error"); return; }
 
-    const [data, categoriesRaw] = await Promise.all([
+    const [data, categoriesRaw, categoryCountRows, postCount] = await Promise.all([
         getAkisData(req, { categoryId: category.id }),
-        PostCategory.findAll({ order: [["id", "ASC"]] })
+        PostCategory.findAll({ order: [["id", "ASC"]] }),
+        Post.findAll({
+            attributes: [
+                "categoryId",
+                [sequelize.fn("COUNT", sequelize.col("Post.id")), "count"]
+            ],
+            group: ["categoryId"]
+        } as any),
+        Post.count()
     ]);
     const categories: any = categoriesRaw;
     const uniIdx2 = categories.findIndex((c: any) => c.name === "Üniversite");
     if (uniIdx2 > -1) { const [uni] = categories.splice(uniIdx2, 1); categories.splice(2, 0, uni); }
-    res.status(200).render("forum/feed", { ...data, kategori: category.name, slug, userId: req.session.userId || null, categories });
+
+    const countByCategoryId: Record<number, number> = {};
+    (categoryCountRows as any[]).forEach(r => {
+        countByCategoryId[Number((r as any).categoryId)] = Number((r as any).getDataValue("count"));
+    });
+    const categoryCountMap: Record<string, number> = {};
+    categories.forEach((c: any) => { categoryCountMap[c.name] = countByCategoryId[c.id] || 0; });
+
+    res.status(200).render("forum/feed", { ...data, kategori: category.name, slug, userId: req.session.userId || null, categories, categoryCountMap, postCount });
 };
 
 export const createGet = async (req: Request, res: Response): Promise<void> => {

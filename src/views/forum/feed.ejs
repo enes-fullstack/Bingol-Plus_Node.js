@@ -64,6 +64,21 @@
       <p style="color:var(--ink-soft);font-size:14px;">Tüm gönderiler en yeni en üstte<%= kategori ? ' (' + kategori + ')' : '' %></p>
     </div>
 
+    <div class="cat-filter" style="margin-bottom:24px;">
+      <a href="/forum/akis" class="cat-pill <%= !slug ? 'active' : '' %>">
+        <span class="cat-left"><span class="cat-dot" style="background:var(--paper); border:1px solid var(--stone);"></span>Tüm konular</span>
+        <span class="cat-count"><%= typeof postCount !== 'undefined' ? postCount : 0 %></span>
+      </a>
+      <% categories.forEach(cat => { %>
+        <% const count = (typeof categoryCountMap !== 'undefined' && categoryCountMap[cat.name] != null) ? categoryCountMap[cat.name] : 0; %>
+        <% const catSlug = slugify(cat.name); %>
+        <a href="/forum/akis/<%= catSlug %>" class="cat-pill <%= slug === catSlug ? 'active' : '' %>">
+          <span class="cat-left"><span class="cat-dot" style="background:var(--lake)"></span><%= cat.name %></span>
+          <span class="cat-count"><%= count %></span>
+        </a>
+      <% }) %>
+    </div>
+
     <% if (userId) { %>
       <details class="create-card" style="margin-bottom:24px;">
         <summary class="create-summary">+ Yeni Konu Aç</summary>
