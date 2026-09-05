@@ -10,6 +10,8 @@ router.get("/ilanlar", generalLimiter, userController.jobs_get);
 router.get("/ilanlar/ilan-ekle", generalLimiter, requireAuth, userController.ilan_ekle_get);
 router.post("/ilanlar/ilan-ekle", requireAuth, generalLimiter, userController.ilan_ekle_post);
 router.post("/ilanlar/sil/:id", requireAuth, generalLimiter, userController.jobDelete_post);
+router.get("/ilanlar/duzenle/:id", (_req, res) => res.status(404).render("user/error"));
+router.post("/ilanlar/duzenle/:id", (_req, res) => res.status(404).render("user/error"));
 router.get("/ilanlar/:id{/:slug}", generalLimiter, userController.job_detail_get);
 router.get("/iletisim", generalLimiter, userController.contact_get);
 router.get("/hakkimizda", generalLimiter, userController.about_get);
