@@ -12,7 +12,7 @@ import { optimizeUrl } from "../cloud/upload.js";
 import { slugify } from "../helpers/slug.js";
 import { validateReplyContent } from "../helpers/validation.js";
 import { error } from "../log/logger.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 const fetchPostsWithMeta = async (
     req: Request,
@@ -111,7 +111,7 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
         res.status(200).json({ posts, hasMore: offset + 10 < total, isAdmin });
     } catch (err) {
         console.log("Error Code:", 4006);
-        error(`Post listesi alınırken hata: ${formatLogMessage(err)}`);
+        error(`Post listesi alınırken hata: ${normalizeError(err)}`);
         res.status(500).json({ error: "Bir hata oluştu" });
     }
 };
@@ -138,7 +138,7 @@ export const searchPosts = async (req: Request, res: Response): Promise<void> =>
         res.status(200).json({ posts, total, query: q });
     } catch (err) {
         console.log("Error Code:", 4007);
-        error(`Forum arama hatası: ${formatLogMessage(err)}`);
+        error(`Forum arama hatası: ${normalizeError(err)}`);
         res.status(500).json({ error: "Bir hata oluştu" });
     }
 };
@@ -175,7 +175,7 @@ export const toggleSave = async (req: Request, res: Response): Promise<void> => 
         }
     } catch (err) {
         console.log("Error Code:", 5007);
-        error(`İlan kaydetme/kaldırma hatası (kullanıcı ID: ${req.session.userId}, ilan ID: ${req.params.jobId}): ${formatLogMessage(err)}`);
+        error(`İlan kaydetme/kaldırma hatası (kullanıcı ID: ${req.session.userId}, ilan ID: ${req.params.jobId}): ${normalizeError(err)}`);
         res.status(500).json({ saved: false, error: "Bir hata oluştu" });
     }
 };
@@ -216,7 +216,7 @@ export const toggleLike = async (req: Request, res: Response): Promise<void> => 
         }
     } catch (err) {
         console.log("Error Code:", 4005);
-        error(`Beğeni değiştirme hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${formatLogMessage(err)}`);
+        error(`Beğeni değiştirme hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${normalizeError(err)}`);
         res.status(500).json({ liked: false, error: "Bir hata oluştu" });
     }
 };
@@ -265,7 +265,7 @@ export const addReply = async (req: Request, res: Response): Promise<void> => {
         res.status(201).json({ reply: ru });
     } catch (err) {
         console.log("Error Code:", 4003);
-        error(`Yanıt ekleme hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${formatLogMessage(err)}`);
+        error(`Yanıt ekleme hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${normalizeError(err)}`);
         res.status(500).json({ error: "Bir hata oluştu" });
     }
 };
@@ -302,7 +302,7 @@ export const getReplies = async (req: Request, res: Response): Promise<void> => 
         res.status(200).json({ replies: plainReplies, total, hasMore: offset + 10 < total });
     } catch (err) {
         console.log("Error Code:", 4008);
-        error(`Yanıt listesi alınırken hata (post ID: ${req.params.postId}): ${formatLogMessage(err)}`);
+        error(`Yanıt listesi alınırken hata (post ID: ${req.params.postId}): ${normalizeError(err)}`);
         res.status(500).json({ error: "Bir hata oluştu" });
     }
 };

@@ -5,7 +5,6 @@ node_modules
 .env.production
 .env.local
 .env.docker
-certs
 dist
 NOTE.md
 TODO.md

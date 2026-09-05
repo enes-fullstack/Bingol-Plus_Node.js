@@ -15,7 +15,7 @@ import admin from "./routers/admin.js";
 import { csrfMiddleware } from "./middleware/csrf.js";
 import loadUser from "./middleware/loadUser.js";
 import { error } from "./log/logger.js";
-import { formatLogMessage } from "./helpers/formatLogMessage.js";
+import { normalizeError } from "./helpers/normalizeError.js";
 import helmetConfig from "./security/helmet.js";
 import sitemapRouter from "./routers/sitemap.js";
 import { slugify } from "./helpers/slug.js";
@@ -44,7 +44,7 @@ app.use((req, res, next) => {
         if (req.session && req.session.flash) {
             req.session.save((err: unknown) => {
                 if (err) {
-                    error(`Session kaydedilirken hata: ${formatLogMessage(err)}`);
+                    error(`Session kaydedilirken hata: ${normalizeError(err)}`);
                 }
                 origRedirect(url);
             });

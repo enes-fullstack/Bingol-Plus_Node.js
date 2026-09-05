@@ -2,7 +2,7 @@ import winston from "winston";
 import Transport from "winston-transport";
 
 import Log from "../models/log.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 const LOG_TYPES = ["success", "info", "warning", "error", "critical"] as const;
 export type LogType = typeof LOG_TYPES[number];
@@ -14,7 +14,7 @@ class SequelizeTransport extends Transport {
 
     async log(info: { message: unknown; type?: string; level: string }, callback: () => void): Promise<void> {
         const type = info.type || info.level;
-        const message = formatLogMessage(info.message);
+        const message = normalizeError(info.message);
 
         if (!LOG_TYPES.includes(type as LogType)) {
             setImmediate(() => callback());
@@ -45,21 +45,21 @@ const logger = winston.createLogger({
 });
 
 export const success = (message: unknown): void => {
-    logger.log({ level: "info", message: formatLogMessage(message), type: "success" });
+    logger.log({ level: "info", message: normalizeError(message), type: "success" });
 };
 
 export const info = (message: unknown): void => {
-    logger.log({ level: "info", message: formatLogMessage(message), type: "info" });
+    logger.log({ level: "info", message: normalizeError(message), type: "info" });
 };
 
 export const warning = (message: unknown): void => {
-    logger.log({ level: "warn", message: formatLogMessage(message), type: "warning" });
+    logger.log({ level: "warn", message: normalizeError(message), type: "warning" });
 };
 
 export const error = (message: unknown): void => {
-    logger.log({ level: "error", message: formatLogMessage(message), type: "error" });
+    logger.log({ level: "error", message: normalizeError(message), type: "error" });
 };
 
 export const critical = (message: unknown): void => {
-    logger.log({ level: "error", message: formatLogMessage(message), type: "critical" });
+    logger.log({ level: "error", message: normalizeError(message), type: "critical" });
 };

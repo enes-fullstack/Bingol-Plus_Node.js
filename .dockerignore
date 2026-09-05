@@ -5,7 +5,6 @@ node_modules
 .env.production
 .env.local
 .env.example
-certs
 test
 .git
 scripts

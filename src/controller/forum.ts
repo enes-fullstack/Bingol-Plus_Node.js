@@ -10,7 +10,7 @@ import { optimizeUrl } from "../cloud/upload.js";
 import { validateForumForm } from "../helpers/validation.js";
 import { slugify } from "../helpers/slug.js";
 import { error } from "../log/logger.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 const isAdminUser = async (userId: number): Promise<boolean> => {
     const user = await User.findByPk(userId, { attributes: ["role"] });
@@ -310,7 +310,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
         res.redirect(redirect);
     } catch (err) {
         console.log("Error Code:", 4001);
-        error(`Post oluşturulurken hata (kullanıcı ID: ${req.session.userId}): ${formatLogMessage(err)}`);
+        error(`Post oluşturulurken hata (kullanıcı ID: ${req.session.userId}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Konu oluşturulurken bir hata oluştu." };
         res.redirect("/forum/konu-ac");
     }

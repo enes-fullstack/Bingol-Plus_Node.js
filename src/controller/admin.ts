@@ -17,7 +17,7 @@ import { sendJobNotification } from "../services/mail.js";
 import { success, error } from "../log/logger.js";
 import { validateJobForm } from "../helpers/validation.js";
 import { slugify } from "../helpers/slug.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 export const dashboardGet = async (req: Request, res: Response): Promise<void> => {
     const jobCount = await Job.count();
@@ -73,7 +73,7 @@ export const createJobPost = async (req: Request, res: Response): Promise<void> 
         res.redirect("/admin");
     } catch (err) {
         console.log("Error Code:", 5004);
-        error(`İlan eklenirken hata: ${formatLogMessage(err)}`);
+        error(`İlan eklenirken hata: ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan eklenirken bir hata oluştu." };
         res.redirect("/admin/ilan-ekle");
     }
@@ -130,7 +130,7 @@ export const editJobPost = async (req: Request, res: Response): Promise<void> =>
         res.redirect("/admin/ilan-ekle");
     } catch (err) {
         console.log("Error Code:", 5005);
-        error(`İlan güncellenirken hata (ID: ${id}): ${formatLogMessage(err)}`);
+        error(`İlan güncellenirken hata (ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan güncellenirken bir hata oluştu." };
         res.redirect(`/admin/ilan-duzenle/${id}`);
     }
@@ -156,7 +156,7 @@ export const jobDeletePost = async (req: Request, res: Response): Promise<void> 
         res.redirect("/admin/ilan-ekle");
     } catch (err) {
         console.log("Error Code:", 5006);
-        error(`İlan silinirken hata (ID: ${id}): ${formatLogMessage(err)}`);
+        error(`İlan silinirken hata (ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan silinirken bir hata oluştu." };
         res.redirect("/admin/ilan-ekle");
     }
@@ -232,7 +232,7 @@ export const requestApprovePost = async (req: Request, res: Response): Promise<v
         res.redirect("/admin/talepler");
     } catch (err) {
         console.log("Error Code:", 5008);
-        error(`İlan onaylanırken hata (talep ID: ${id}): ${formatLogMessage(err)}`);
+        error(`İlan onaylanırken hata (talep ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Onaylama sırasında bir hata oluştu." };
         res.redirect("/admin/talepler");
     }
@@ -262,7 +262,7 @@ export const requestRejectPost = async (req: Request, res: Response): Promise<vo
         res.redirect("/admin/talepler");
     } catch (err) {
         console.log("Error Code:", 5009);
-        error(`İlan reddedilirken hata (talep ID: ${id}): ${formatLogMessage(err)}`);
+        error(`İlan reddedilirken hata (talep ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Reddetme sırasında bir hata oluştu." };
         res.redirect("/admin/talepler");
     }
@@ -302,6 +302,43 @@ export const logsGet = async (req: Request, res: Response): Promise<void> => {
         username,
         userId: req.session.userId || null
     });
+};
+
+export const logDeletePost = async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) { res.redirect("/admin/loglar"); return; }
+
+    try {
+        const log = await Log.findByPk(id);
+        if (!log) {
+            req.session.flash = { type: "error", message: "Log bulunamadı." };
+            res.redirect("/admin/loglar");
+            return;
+        }
+        await log.destroy();
+        success(`Log silindi (ID: ${id})`);
+        req.session.flash = { type: "success", message: "Log silindi." };
+        res.redirect("/admin/loglar");
+    } catch (err) {
+        console.log("Error Code:", 6010);
+        error(`Log silinirken hata (ID: ${id}): ${normalizeError(err)}`);
+        req.session.flash = { type: "error", message: "Log silinirken bir hata oluştu." };
+        res.redirect("/admin/loglar");
+    }
+};
+
+export const logsDeleteAllPost = async (req: Request, res: Response): Promise<void> => {
+    try {
+        await Log.destroy({ where: {} });
+        success("Tüm loglar silindi");
+        req.session.flash = { type: "success", message: "Tüm loglar silindi." };
+        res.redirect("/admin/loglar");
+    } catch (err) {
+        console.log("Error Code:", 6011);
+        error(`Tüm loglar silinirken hata: ${normalizeError(err)}`);
+        req.session.flash = { type: "error", message: "Loglar silinirken bir hata oluştu." };
+        res.redirect("/admin/loglar");
+    }
 };
 
 export const usersGet = async (req: Request, res: Response): Promise<void> => {
@@ -387,7 +424,7 @@ export const userBanPost = async (req: Request, res: Response): Promise<void> =>
         res.redirect("/admin/kullanicilar");
     } catch (err) {
         console.log("Error Code:", 3003);
-        error(`Kullanıcı banlanırken hata (ID: ${id}): ${formatLogMessage(err)}`);
+        error(`Kullanıcı banlanırken hata (ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İşlem sırasında bir hata oluştu." };
         res.redirect("/admin/kullanicilar");
     }
@@ -426,7 +463,7 @@ export const userDeletePost = async (req: Request, res: Response): Promise<void>
         res.redirect("/admin/kullanicilar");
     } catch (err) {
         console.log("Error Code:", 3004);
-        error(`Kullanıcı silinirken hata (ID: ${id}): ${formatLogMessage(err)}`);
+        error(`Kullanıcı silinirken hata (ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Kullanıcı silinirken bir hata oluştu." };
         res.redirect("/admin/kullanicilar");
     }
@@ -449,7 +486,7 @@ export const topicDeletePost = async (req: Request, res: Response): Promise<void
         res.redirect("/forum");
     } catch (err) {
         console.log("Error Code:", 4011);
-        error(`Konu silinirken hata (post ID: ${postId}): ${formatLogMessage(err)}`);
+        error(`Konu silinirken hata (post ID: ${postId}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Konu silinirken bir hata oluştu." };
         res.redirect("/forum");
     }
@@ -511,7 +548,7 @@ export const categoryCreatePost = async (req: Request, res: Response): Promise<v
         res.redirect("/admin/kategoriler");
     } catch (err) {
         console.log("Error Code:", 4009);
-        error(`Kategori eklenirken hata: ${formatLogMessage(err)}`);
+        error(`Kategori eklenirken hata: ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Kategori eklenirken bir hata oluştu." };
         res.redirect("/admin/kategoriler");
     }
@@ -542,7 +579,7 @@ export const categoryDeletePost = async (req: Request, res: Response): Promise<v
         res.redirect("/admin/kategoriler");
     } catch (err) {
         console.log("Error Code:", 4010);
-        error(`Kategori silinirken hata (ID: ${id}): ${formatLogMessage(err)}`);
+        error(`Kategori silinirken hata (ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Kategori silinirken bir hata oluştu." };
         res.redirect("/admin/kategoriler");
     }

@@ -17,7 +17,7 @@ import { validateToken } from "../middleware/csrf.js";
 import { optimizeUrl, uploadImageFromBuffer, deleteImage, extractPublicId } from "../cloud/upload.js";
 import { slugify } from "../helpers/slug.js";
 import { error } from "../log/logger.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
@@ -229,7 +229,7 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
         res.redirect("/ilanlar");
     } catch (err) {
         console.log("Error Code:", 3007);
-        error(`İlan talebi gönderilirken hata (kullanıcı ID: ${req.session.userId}): ${formatLogMessage(err)}`);
+        error(`İlan talebi gönderilirken hata (kullanıcı ID: ${req.session.userId}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan talebi gönderilirken bir hata oluştu." };
         res.redirect("/ilanlar/ilan-ekle");
     }
@@ -289,7 +289,7 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
             }
         } catch (e) {
             console.log("Error Code:", 3005);
-            error(`Dosya tipi doğrulanamadı (kullanıcı ID: ${req.session.userId}): ${formatLogMessage(e)}`);
+            error(`Dosya tipi doğrulanamadı (kullanıcı ID: ${req.session.userId}): ${normalizeError(e)}`);
             req.session.flash = { type: "error", message: "Dosya doğrulanamadı." };
             res.redirect("/profilim");
             return;
@@ -308,7 +308,7 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
             result = await uploadImageFromBuffer(req.file.buffer);
         } catch (uploadErr) {
             console.log("Error Code:", 3005);
-            error(`Profil resmi yüklenemedi (kullanıcı ID: ${req.session.userId}): ${formatLogMessage(uploadErr)}`);
+            error(`Profil resmi yüklenemedi (kullanıcı ID: ${req.session.userId}): ${normalizeError(uploadErr)}`);
             req.session.flash = { type: "error", message: "Dosya yüklenirken bir hata oluştu." };
             res.redirect("/profilim");
             return;
@@ -345,7 +345,7 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
         } catch (dbErr) {
             await deleteImage(result.publicId).catch(() => {});
             console.log("Error Code:", 3005);
-            error(`Profil resmi DB güncellenemedi (kullanıcı ID: ${req.session.userId}): ${formatLogMessage(dbErr)}`);
+            error(`Profil resmi DB güncellenemedi (kullanıcı ID: ${req.session.userId}): ${normalizeError(dbErr)}`);
             req.session.flash = { type: "error", message: "Dosya yüklenirken bir hata oluştu." };
             res.redirect("/profilim");
             return;
@@ -394,7 +394,7 @@ export const jobDelete_post = async (req: Request, res: Response): Promise<void>
         res.redirect("/profilim");
     } catch (err) {
         console.log("Error Code:", 5006);
-        error(`İlan silinirken hata (kullanıcı ID: ${req.session.userId}, ilan ID: ${id}): ${formatLogMessage(err)}`);
+        error(`İlan silinirken hata (kullanıcı ID: ${req.session.userId}, ilan ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan silinirken bir hata oluştu." };
         res.redirect("/profilim");
     }

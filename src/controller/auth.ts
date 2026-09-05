@@ -9,7 +9,7 @@ import { validateEmail, validateUsername, validatePassword } from "../helpers/va
 import { sendResetEmail } from "../services/mail.js";
 import { sequelize } from "../database/connection.js";
 import { error } from "../log/logger.js";
-import { formatLogMessage } from "../helpers/formatLogMessage.js";
+import { normalizeError } from "../helpers/normalizeError.js";
 
 interface LoginBody {
     username: string;
@@ -65,13 +65,13 @@ export const login_post = async (req: Request, res: Response): Promise<void> => 
         await destroyStaleUserSessions(user.id);
     } catch (err) {
         console.log("Error Code:", 2006);
-        error(`Eski sessionlar temizlenirken hata: ${formatLogMessage(err)}`);
+        error(`Eski sessionlar temizlenirken hata: ${normalizeError(err)}`);
     }
 
     req.session.regenerate((err) => {
         if (err) {
             console.log("Error Code:", 2004);
-            error(`Session yenilenirken hata: ${formatLogMessage(err)}`);
+            error(`Session yenilenirken hata: ${normalizeError(err)}`);
             res.redirect("/");
             return;
         }
@@ -90,7 +90,7 @@ export const logout_get = (req: Request, res: Response): void => {
     req.session.destroy((err: unknown) => {
         if (err) {
             console.log("Error Code:", 2005);
-            error(`Oturum sonlandırılırken hata: ${formatLogMessage(err)}`);
+            error(`Oturum sonlandırılırken hata: ${normalizeError(err)}`);
         }
         res.redirect("/");
     });
@@ -143,7 +143,7 @@ export const signup_post = async (req: Request, res: Response): Promise<void> =>
         req.session.regenerate((err) => {
             if (err) {
                 console.log("Error Code:", 2004);
-                error(`Session yenilenirken hata (kayıt): ${formatLogMessage(err)}`);
+                error(`Session yenilenirken hata (kayıt): ${normalizeError(err)}`);
                 req.session.flash = { type: "error", message: "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.", oldInput: { email, username } };
                 res.redirect("/kayit-ol");
                 return;
@@ -154,7 +154,7 @@ export const signup_post = async (req: Request, res: Response): Promise<void> =>
         });
     } catch (err: unknown) {
         console.log("Error Code:", 3006);
-        error(`Kayıt olurken hata (${email}): ${formatLogMessage(err)}`);
+        error(`Kayıt olurken hata (${email}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.", oldInput: { email, username } };
         res.redirect("/kayit-ol");
     }
@@ -197,14 +197,14 @@ export const forgot_password_post = async (req: Request, res: Response): Promise
             });
         } catch (err) {
             console.log("Error Code:", 2007);
-            error(`Şifre sıfırlama token oluşturulurken hata (${email}): ${formatLogMessage(err)}`);
+            error(`Şifre sıfırlama token oluşturulurken hata (${email}): ${normalizeError(err)}`);
         }
 
         try {
             await sendResetEmail(email, token);
         } catch (err) {
             console.log("Error Code:", 2007);
-            error(`Şifre sıfırlama e-postası gönderilirken hata (${email}): ${formatLogMessage(err)}`);
+            error(`Şifre sıfırlama e-postası gönderilirken hata (${email}): ${normalizeError(err)}`);
         }
     }
 
@@ -289,7 +289,7 @@ export const reset_password_post = async (req: Request, res: Response): Promise<
             return;
         }
         console.log("Error Code:", 2007);
-        error(`Şifre sıfırlama sırasında hata: ${formatLogMessage(err)}`);
+        error(`Şifre sıfırlama sırasında hata: ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Bir hata oluştu. Lütfen tekrar deneyin." };
         res.redirect("/giris-yap");
         return;

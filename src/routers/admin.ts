@@ -16,6 +16,8 @@ router.get("/admin/talep/:id", generalLimiter, requireAdmin, adminController.req
 router.post("/admin/talep-onayla/:id", requireAdmin, adminLimiter, adminController.requestApprovePost);
 router.post("/admin/talep-reddet/:id", requireAdmin, adminLimiter, adminController.requestRejectPost);
 router.get("/admin/loglar", generalLimiter, requireAdmin, adminController.logsGet);
+router.post("/admin/log-sil/:id", requireAdmin, adminLimiter, adminController.logDeletePost);
+router.post("/admin/loglar/sil", requireAdmin, adminLimiter, adminController.logsDeleteAllPost);
 router.get("/admin/kullanicilar", generalLimiter, requireAdmin, adminController.usersGet);
 router.post("/admin/kullanici-sil/:id", requireAdmin, adminLimiter, adminController.userDeletePost);
 router.post("/admin/kullanici-ban/:id", requireAdmin, adminLimiter, adminController.userBanPost);

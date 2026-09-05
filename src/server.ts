@@ -8,7 +8,7 @@ import { connection } from "./database/connection.js";
 import { defineRelationships } from "./database/relationships.js";
 import { sessionStore } from "./config/session.js";
 import { error } from "./log/logger.js";
-import { formatLogMessage } from "./helpers/formatLogMessage.js";
+import { normalizeError } from "./helpers/normalizeError.js";
 
 // PROMISE CHAIN
 (async () => {
@@ -17,7 +17,7 @@ import { formatLogMessage } from "./helpers/formatLogMessage.js";
         await sessionStore.sync();
         defineRelationships();
     } catch (err) {
-        error(`Uygulama başlatılırken hata: ${formatLogMessage(err)}`);
+        error(`Uygulama başlatılırken hata: ${normalizeError(err)}`);
         process.exit(1);
     }
 })();
