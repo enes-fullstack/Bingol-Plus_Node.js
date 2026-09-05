@@ -80,7 +80,6 @@
             <div class="job-footer">
               <span class="mono"><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
               <div style="display:flex;gap:8px;margin-left:auto;">
-                <a href="/ilanlar/duzenle/<%= job.id %>" class="btn btn-ghost btn-sm">Düzenle</a>
                 <form method="POST" action="/ilanlar/sil/<%= job.id %>" data-title="<%= job.title %>" style="display:inline;">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button type="submit" class="btn btn-ghost btn-sm job-delete-form" style="color:var(--clay);">Sil</button>

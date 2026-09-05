@@ -1043,9 +1043,7 @@ html[data-theme="dark"] .request-card,
 html[data-theme="dark"] .forum-hero,
 html[data-theme="dark"] .cat-card,
 html[data-theme="dark"] .create-card,
-html[data-theme="dark"] .job-card,
-html[data-theme="dark"] .detail-grid,
-html[data-theme="dark"] .detail-section {
+html[data-theme="dark"] .job-card {
   background: #1E2320;
   border-color: var(--stone-line);
   box-shadow: var(--shadow);

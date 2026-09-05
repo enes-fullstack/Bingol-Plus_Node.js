@@ -12,6 +12,7 @@
       <a href="/ilanlar" class="<%= page === 'ilanlar' ? 'current' : '' %>">İş İlanları</a>
       <a href="/forum/akis" class="<%= page === 'forum' ? 'current' : '' %>">Forum</a>
       <a href="/iletisim" class="<%= page === 'iletisim' ? 'current' : '' %>">İletişim</a>
+      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %><a href="/admin" class="<%= page === 'admin' ? 'current' : '' %>">Admin</a><% } %>
       <% if (typeof userId !== 'undefined' && userId) { %><a href="/profilim" class="<%= page === 'profilim' ? 'current' : '' %>">Profilim</a><% } %>
     </div>
     <div class="nav-actions">
@@ -35,6 +36,7 @@
       <a href="/ilanlar" class="<%= page === 'ilanlar' ? 'current' : '' %>">İş İlanları</a>
       <a href="/forum/akis" class="<%= page === 'forum' ? 'current' : '' %>">Forum</a>
       <a href="/iletisim" class="<%= page === 'iletisim' ? 'current' : '' %>">İletişim</a>
+      <% if (typeof isAdmin !== 'undefined' && isAdmin) { %><a href="/admin" class="<%= page === 'admin' ? 'current' : '' %>">Admin</a><% } %>
       <% if (typeof userId !== 'undefined' && userId) { %>
         <a href="/profilim" class="<%= page === 'profilim' ? 'current' : '' %>">Profilim</a>
         <a href="/cikis-yap">Çıkış Yap</a>

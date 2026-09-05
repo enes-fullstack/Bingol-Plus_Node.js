@@ -9,8 +9,6 @@ router.get("/", generalLimiter, userController.home_get);
 router.get("/ilanlar", generalLimiter, userController.jobs_get);
 router.get("/ilanlar/ilan-ekle", generalLimiter, requireAuth, userController.ilan_ekle_get);
 router.post("/ilanlar/ilan-ekle", requireAuth, generalLimiter, userController.ilan_ekle_post);
-router.get("/ilanlar/duzenle/:id", generalLimiter, requireAuth, userController.editJob_get);
-router.post("/ilanlar/duzenle/:id", requireAuth, generalLimiter, userController.editJob_post);
 router.post("/ilanlar/sil/:id", requireAuth, generalLimiter, userController.jobDelete_post);
 router.get("/ilanlar/:id{/:slug}", generalLimiter, userController.job_detail_get);
 router.get("/iletisim", generalLimiter, userController.contact_get);

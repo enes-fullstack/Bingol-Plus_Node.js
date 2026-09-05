@@ -135,46 +135,21 @@ async function createForeignJob(): Promise<number> {
 }
 
 describe("GET /ilanlar/duzenle/:id", () => {
-    it("giriş yapmamışsa 302 ile /giris-yap yönlendirir", async () => {
-        const agent = request.agent(app);
-        const res = await agent.get("/ilanlar/duzenle/1");
-        expectRedirect(res, "/giris-yap");
-    });
-
-    it("kendi ilanıysa 200 ile düzenleme formunu döner", async () => {
+    it("kullanıcı düzenleme yetkisi kaldırıldığı için 404 döner", async () => {
         const agent = request.agent(app);
         const csrf1 = await getCsrfToken(agent, "/forum/akis");
         await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
         const res = await agent.get("/ilanlar/duzenle/1");
-        expect(res.status).toBe(200);
-        expect(res.text).toContain("İlanı Düzenle");
-        expect(res.text).toContain('value="Web Geliştirici"');
-    });
-
-    it("başkasının ilanıysa 302 ile /profilim yönlendirir", async () => {
-        const foreignId = await createForeignJob();
-        const agent = request.agent(app);
-        const csrf1 = await getCsrfToken(agent, "/forum/akis");
-        await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
-        const res = await agent.get(`/ilanlar/duzenle/${foreignId}`);
-        expectRedirect(res, "/profilim");
-    });
-
-    it("var olmayan ilan için 404 döner", async () => {
-        const agent = request.agent(app);
-        const csrf1 = await getCsrfToken(agent, "/forum/akis");
-        await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
-        const res = await agent.get("/ilanlar/duzenle/999");
         expect(res.status).toBe(404);
     });
 });
 
 describe("POST /ilanlar/duzenle/:id", () => {
-    it("kendi ilanını günceller ve /profilim yönlendirir", async () => {
+    it("kullanıcı düzenleme yetkisi kaldırıldığı için 404 döner", async () => {
         const agent = request.agent(app);
         const csrf1 = await getCsrfToken(agent, "/forum/akis");
         await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
-        const csrf2 = await getCsrfToken(agent, "/ilanlar/duzenle/2");
+        const csrf2 = await getCsrfToken(agent, "/forum/akis");
         const res = await agent.post("/ilanlar/duzenle/2").type("form").send({
             _csrf: csrf2,
             title: "Muhasebe Uzmanı (Güncel)",
@@ -182,47 +157,7 @@ describe("POST /ilanlar/duzenle/:id", () => {
             company: "Test Şirket 2",
             location: "Bingöl Merkez",
         });
-        expectRedirect(res, "/profilim");
-
-        const { default: Job } = await import("../../src/models/jobs.js");
-        const job = await Job.findByPk(2);
-        expect(job!.title).toBe("Muhasebe Uzmanı (Güncel)");
-        expect(job!.description).toBe("Güncellenmiş açıklama");
-    });
-
-    it("başkasının ilanını güncelleyemez ve /profilim yönlendirir", async () => {
-        const foreignId = await createForeignJob();
-        const agent = request.agent(app);
-        const csrf1 = await getCsrfToken(agent, "/forum/akis");
-        await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
-        const csrf2 = await getCsrfToken(agent, "/forum/akis");
-        const res = await agent.post(`/ilanlar/duzenle/${foreignId}`).type("form").send({
-            _csrf: csrf2,
-            title: "Hack Denemesi",
-            description: "Değiştirilmemeli",
-            company: "Rakip A.Ş.",
-            location: "Bingöl",
-        });
-        expectRedirect(res, "/profilim");
-
-        const { default: Job } = await import("../../src/models/jobs.js");
-        const job = await Job.findByPk(foreignId);
-        expect(job!.title).toBe("Başkasının İlanı");
-    });
-
-    it("geçersiz veri ile düzenleme sayfasına geri yönlendirir", async () => {
-        const agent = request.agent(app);
-        const csrf1 = await getCsrfToken(agent, "/forum/akis");
-        await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
-        const csrf2 = await getCsrfToken(agent, "/ilanlar/duzenle/3");
-        const res = await agent.post("/ilanlar/duzenle/3").type("form").send({
-            _csrf: csrf2,
-            title: "",
-            description: "",
-            company: "",
-            location: "",
-        });
-        expectRedirect(res, "/ilanlar/duzenle/3");
+        expect(res.status).toBe(404);
     });
 });
 
