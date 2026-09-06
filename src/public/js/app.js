@@ -22,7 +22,11 @@
 
   function getLargeUrl(url) {
     if (!url) return null;
-    return url.replace("/upload/", "/upload/w_150,h_150,c_fill,f_auto,q_auto/");
+    if (url.indexOf("/upload/") === -1) return url;
+    // Strip any existing Cloudinary transformation segment (e.g. w_36,h_36,c_fill,f_auto,q_auto)
+    // which contains a comma, so we don't upscale a low-res thumbnail
+    var cleanUrl = url.replace(/\/upload\/[^\/]*,[^\/]*\//, "/upload/");
+    return cleanUrl.replace("/upload/", "/upload/w_800,h_800,c_fill,f_auto,q_auto/");
   }
 
   /* ── Theme (Dark / Light) ── */
@@ -395,7 +399,16 @@
           var list = document.getElementById("repliesList");
           var empty = document.getElementById("noRepliesMsg");
           if (empty) empty.remove();
-          list.insertAdjacentHTML("afterbegin", buildReplyHtml(data.reply));
+          var html = buildReplyHtml(data.reply);
+          var isAdmin = data.reply.User && data.reply.User.role === "admin";
+          if (!isAdmin) {
+            var items = list.querySelectorAll(".reply-item");
+            var lastAdmin = -1;
+            for (var i = 0; i < items.length; i++) { if (items[i].querySelector(".admin-username")) lastAdmin = i; }
+            if (lastAdmin >= 0) { items[lastAdmin].insertAdjacentHTML("afterend", html); } else { list.insertAdjacentHTML("afterbegin", html); }
+          } else {
+            list.insertAdjacentHTML("afterbegin", html);
+          }
           document.getElementById("replyContent").value = "";
 
           var label = document.getElementById("repliesToggleLabel");
@@ -414,6 +427,10 @@
       var date = new Date(r.createdAt).toLocaleDateString("tr-TR");
       var username = escapeHtml(r.User.username);
       var content = escapeHtml(r.content);
+      var isAdmin = r.User && r.User.role === "admin";
+      var adminClass = isAdmin ? ' class="admin-username"' : "";
+      var avatarAdminClass = isAdmin ? ' admin-avatar' : "";
+      var tickHtml = isAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
       var avatarHtml;
       var avatarAttr = 'data-avatar=""';
       if (r.User.profileImage) {
@@ -426,9 +443,9 @@
       }
       return (
         '<div class="reply-item">' +
-        '<div class="reply-avatar" ' + avatarAttr + ">" + avatarHtml + "</div>" +
+        '<div class="reply-avatar' + avatarAdminClass + '" ' + avatarAttr + ">" + avatarHtml + "</div>" +
         '<div class="reply-body">' +
-        '<div class="reply-head"><strong>' + username + "</strong> &middot; " + date + "</div>" +
+        '<div class="reply-head"><strong' + adminClass + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
         '<div class="reply-text">' + content + "</div>" +
         "</div>" +
         "</div>"
@@ -575,7 +592,16 @@
         var list = section.querySelector(".replies-list");
         var empty = list.querySelector(".no-replies-msg");
         if (empty) empty.remove();
-        list.insertAdjacentHTML("afterbegin", buildFeedReplyHtml(data.reply));
+        var html2 = buildFeedReplyHtml(data.reply);
+        var isAdmin2 = data.reply.User && data.reply.User.role === "admin";
+        if (!isAdmin2) {
+          var items2 = list.querySelectorAll(".reply-item");
+          var lastAdmin2 = -1;
+          for (var j = 0; j < items2.length; j++) { if (items2[j].querySelector(".admin-username")) lastAdmin2 = j; }
+          if (lastAdmin2 >= 0) { items2[lastAdmin2].insertAdjacentHTML("afterend", html2); } else { list.insertAdjacentHTML("afterbegin", html2); }
+        } else {
+          list.insertAdjacentHTML("afterbegin", html2);
+        }
         textarea.value = "";
 
         var loadBtn = section.querySelector(".load-more-btn");
@@ -603,19 +629,23 @@
     var date = new Date(r.createdAt).toLocaleDateString("tr-TR");
     var username = escapeHtml(r.User ? r.User.username : "");
     var content = escapeHtml(r.content);
+    var isAdmin = r.User && r.User.role === "admin";
+    var adminClass = isAdmin ? ' class="admin-username"' : "";
+    var avatarAdminClass = isAdmin ? ' admin-avatar' : "";
+    var tickHtml = isAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
     var avatarHtml;
     if (r.User && r.User.avatarUrl) {
       var profileImage = r.User.profileImage || "";
       avatarHtml = '<img src="' + escapeHtml(r.User.avatarUrl) + '" alt="" class="reply-avatar-img" loading="lazy" data-avatar="' + escapeHtml(profileImage) + '">';
     } else {
       var initial = escapeHtml(r.User ? r.User.username.charAt(0).toUpperCase() : "?");
-      avatarHtml = '<div class="reply-avatar">' + initial + "</div>";
+      avatarHtml = '<div class="reply-avatar' + avatarAdminClass + '">' + initial + "</div>";
     }
     return (
       '<div class="reply-item">' +
       avatarHtml +
       '<div class="reply-body">' +
-      '<div class="reply-head"><strong>' + username + "</strong> &middot; " + date + "</div>" +
+      '<div class="reply-head"><strong' + adminClass + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
       '<div class="reply-text">' + content + "</div>" +
       "</div>" +
       "</div>"
@@ -673,21 +703,23 @@
 
     function buildPostHtml(post) {
       var initial = post.User ? post.User.username.charAt(0).toUpperCase() : "?";
+      var isPostAdmin = post.User && post.User.role === "admin";
       var avatarHtml;
       if (post.User && post.User.avatarUrl) {
         avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="feed-avatar" loading="lazy">';
       } else {
-        avatarHtml = '<span class="feed-avatar-letter">' + initial + "</span>";
+        avatarHtml = '<span class="feed-avatar-letter' + (isPostAdmin ? ' admin-avatar' : '') + '">' + initial + "</span>";
       }
 
+      var tickHtml = isPostAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
       var authorHtml =
         '<span class="post-author" data-avatar="' +
         (post.User && post.User.profileImage ? escapeHtml(post.User.profileImage) : "") +
         '">' +
         avatarHtml +
-        "<strong>" +
+        '<strong' + (isPostAdmin ? ' class="admin-username"' : "") + ">" +
         escapeHtml(post.User ? post.User.username : "?") +
-        "</strong>" +
+        "</strong>" + tickHtml +
         "</span>";
 
       var date = new Date(post.createdAt).toLocaleDateString("tr-TR");
@@ -713,9 +745,12 @@
         ? '<button class="load-more-btn" data-post-id="' + post.id + '" data-offset="3">Daha fazla yanıt göster (' + (replyCount - 3) + ")</button>"
         : "";
 
+      var pinHtml = isPostAdmin
+        ? '<span class="creator-badge">Kurucu Tarafından</span>'
+        : '<span class="pin"></span>';
       return (
         '<article class="post-card" style="margin-bottom:20px;">' +
-        '<span class="pin"></span>' +
+        pinHtml +
         '<h1 class="post-title">' + escapeHtml(post.title) + "</h1>" +
         '<div class="post-meta">' +
         '<span class="cat-tag">' + escapeHtml(post.category) + "</span>" +
@@ -924,6 +959,7 @@
             div.className = "topic";
 
             var initial = post.User ? post.User.username.charAt(0).toUpperCase() : "?";
+            var isTopicAdmin = post.User && post.User.role === "admin";
             var avatarHtml;
             if (post.User && post.User.avatarUrl) {
               avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="topic-avatar-img" loading="lazy">';
@@ -938,16 +974,18 @@
               if (post.User.avatarUrl) {
                 avatarInner = '<img src="' + avatarSrc + '" alt="" class="topic-author-avatar" loading="lazy">';
               } else {
-                avatarInner = '<span class="topic-author-letter">' + initial + "</span>";
+                avatarInner = '<span class="topic-author-letter' + (isTopicAdmin ? ' admin-avatar' : '') + '">' + initial + "</span>";
               }
+              var isAuthorAdmin = post.User.role === "admin";
+              var topicTickHtml = isAuthorAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
               authorHtml =
                 '<span class="topic-author" data-avatar="' +
                 (post.User.profileImage ? escapeHtml(post.User.profileImage) : "") +
                 '">' +
                 avatarInner +
-                "<span>" +
+                '<span' + (isAuthorAdmin ? ' class="admin-username"' : "") + ">" +
                 escapeHtml(post.User.username) +
-                "</span>" +
+                "</span>" + topicTickHtml +
                 "</span>";
             } else {
               authorHtml = "?";
@@ -959,7 +997,7 @@
               : "";
 
             div.innerHTML =
-              '<div class="topic-avatar" style="background:var(--lake)">' +
+              '<div class="topic-avatar' + (isTopicAdmin && !post.User.avatarUrl ? ' admin-avatar' : '') + '" style="background:var(--lake)">' +
               avatarHtml +
               "</div>" +
               '<div class="topic-body">' +

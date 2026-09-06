@@ -14,6 +14,15 @@ import { validateReplyContent } from "../helpers/validation.js";
 import { error } from "../log/logger.js";
 import { normalizeError } from "../helpers/normalizeError.js";
 
+const sortRepliesAdminFirst = <T extends { User?: { role?: string } | null; createdAt: any }>(replies: T[]): T[] => {
+    return [...replies].sort((a, b) => {
+        const aIsAdmin = (a as any).User?.role === "admin" ? 0 : 1;
+        const bIsAdmin = (b as any).User?.role === "admin" ? 0 : 1;
+        if (aIsAdmin !== bIsAdmin) return aIsAdmin - bIsAdmin;
+        return new Date((a as any).createdAt).getTime() - new Date((b as any).createdAt).getTime();
+    });
+};
+
 const fetchPostsWithMeta = async (
     req: Request,
     where: Record<string, unknown> | undefined,
@@ -22,7 +31,7 @@ const fetchPostsWithMeta = async (
     const postsRaw = await Post.findAll({
         where,
         include: [
-            { model: User, attributes: ["id", "username", "profileImage"] },
+            { model: User, attributes: ["id", "username", "profileImage", "role"] },
             { model: PostCategory, attributes: ["name"] }
         ],
         order: [["createdAt", "DESC"]],
@@ -36,14 +45,16 @@ const fetchPostsWithMeta = async (
     const replyCounts: Record<number, number> = {};
 
     if (postIds.length > 0) {
-        const allReplies = await PostReply.findAll({
+        const allRepliesRaw = await PostReply.findAll({
             where: { postId: postIds },
-            include: [{ model: User, attributes: ["id", "username", "profileImage"] }],
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
             order: [["createdAt", "ASC"]]
         });
+        const sorted = sortRepliesAdminFirst(allRepliesRaw.map(r => r.get({ plain: true }) as any));
+        const allReplies = sorted as any[];
 
         for (const reply of allReplies) {
-            const plain: any = reply.get({ plain: true });
+            const plain: any = reply;
             if (plain.User) {
                 plain.User.avatarUrl = optimizeUrl(plain.User.profileImage, 28, 28);
             }
@@ -57,6 +68,16 @@ const fetchPostsWithMeta = async (
                 repliesByPost[pid].push(plain);
             }
         }
+        // replyCounts should reflect total count, not sorted slice — recompute correctly
+        // We already counted correctly, but to ensure total counts are accurate, recount via plain counts
+        // (Already counted above, but need total per post — we counted in loop; keep as is)
+        // For accurate total, we need to count all replies per post, not just sorted slice
+        // So we need to recount totals separately without limit
+        // Instead, compute replyCounts from allReplies length per post correctly
+        // Reset and recount properly
+        const countMap: Record<number, number> = {};
+        for (const r of allReplies) countMap[r.postId] = (countMap[r.postId] || 0) + 1;
+        for (const pid of Object.keys(countMap)) replyCounts[Number(pid)] = countMap[Number(pid)];
     }
 
     let userLikedMap: Record<number, boolean> = {};
@@ -254,7 +275,7 @@ export const addReply = async (req: Request, res: Response): Promise<void> => {
         });
 
         const replyWithUser = await PostReply.findByPk(reply.id, {
-            include: [{ model: User, attributes: ["id", "username", "profileImage"] }]
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }]
         });
 
         const ru: any = replyWithUser;
@@ -281,16 +302,15 @@ export const getReplies = async (req: Request, res: Response): Promise<void> => 
     }
 
     try {
-        const replies = await PostReply.findAll({
+        const allRepliesRaw = await PostReply.findAll({
             where: { postId },
-            include: [{ model: User, attributes: ["id", "username", "profileImage"] }],
-            order: [["createdAt", "ASC"]],
-            limit: 10,
-            offset
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
+            order: [["createdAt", "ASC"]]
         });
-
-        const plainReplies = replies.map(r => {
-            const plain: any = r.get({ plain: true });
+        const sorted = sortRepliesAdminFirst(allRepliesRaw as any);
+        const paginated = (sorted as any).slice(offset, offset + 10);
+        const plainReplies = paginated.map((r: any) => {
+            const plain: any = r.get ? r.get({ plain: true }) : r;
             if (plain.User) {
                 plain.User.avatarUrl = optimizeUrl(plain.User.profileImage, 28, 28);
             }

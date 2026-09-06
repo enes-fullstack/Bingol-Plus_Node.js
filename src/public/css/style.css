@@ -495,6 +495,26 @@ section { padding: 56px 0; }
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
+.creator-badge {
+  position: absolute;
+  top: -10px;
+  left: 18px;
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #a855f7 100%);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.5), 0 0 14px rgba(168, 85, 247, 0.45), 0 0 28px rgba(124, 58, 237, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.7), 0 0 12px rgba(255, 255, 255, 0.35);
+  z-index: 2;
+  white-space: nowrap;
+}
+
 .job-loc {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11.5px;
@@ -791,6 +811,149 @@ footer {
   display: flex;
 }
 .foot-social a:hover { transform: scale(1.3); }
+
+.admin-username {
+  position: relative;
+  display: inline-block;
+  color: #b533ff !important;
+  font-weight: 800 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  text-shadow:
+    0 0 7px rgba(181, 51, 255, 0.95),
+    0 0 14px rgba(181, 51, 255, 0.7),
+    0 0 26px rgba(168, 85, 247, 0.5),
+    0 0 42px rgba(147, 51, 234, 0.38),
+    0 0 58px rgba(126, 34, 206, 0.28);
+  animation: adminNeonPulse 1.4s ease-in-out infinite alternate;
+  overflow: visible;
+  vertical-align: baseline;
+  padding: 0 1px;
+}
+
+@keyframes adminNeonPulse {
+  0% {
+    text-shadow:
+      0 0 6px rgba(181, 51, 255, 0.85),
+      0 0 12px rgba(168, 85, 247, 0.55),
+      0 0 22px rgba(168, 85, 247, 0.38),
+      0 0 36px rgba(147, 51, 234, 0.28),
+      0 0 50px rgba(126, 34, 206, 0.2);
+    filter: brightness(1) saturate(1.05);
+  }
+  100% {
+    text-shadow:
+      0 0 10px rgba(181, 51, 255, 1),
+      0 0 20px rgba(168, 85, 247, 0.85),
+      0 0 34px rgba(168, 85, 247, 0.6),
+      0 0 52px rgba(147, 51, 234, 0.48),
+      0 0 70px rgba(147, 51, 234, 0.32),
+      0 0 85px rgba(126, 34, 206, 0.22);
+    filter: brightness(1.18) saturate(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-username {
+    animation: none !important;
+  }
+  .admin-tick-outer {
+    animation: none !important;
+  }
+}
+
+/* Admin verified tick — çok büyük, tırtıklı dişli, dış çerçeve dönen */
+.admin-tick {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 7px;
+  vertical-align: middle;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  isolation: isolate;
+}
+
+.admin-tick-outer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  animation: adminTickOuterSpin 2.2s linear infinite;
+  filter:
+    drop-shadow(0 0 7px rgba(168, 85, 247, 0.65))
+    drop-shadow(0 0 14px rgba(168, 85, 247, 0.38))
+    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.32));
+  will-change: transform;
+}
+
+.admin-tick-gear {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.admin-tick-gear path {
+  fill: #7c3aed;
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  /* kabartmalı kenar vurgusu */
+  filter: drop-shadow(0 1px 1px rgba(255,255,255,0.35));
+}
+
+.admin-tick-inner {
+  position: absolute;
+  inset: 5.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #b794f6 0%, #7c3aed 58%, #5b21b6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    inset 0 1.8px 2.5px rgba(255, 255, 255, 0.5),
+    inset 0 -1.8px 2.5px rgba(0, 0, 0, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 1px 3px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.admin-tick-inner svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+  flex: none;
+  transform: none !important;
+}
+
+@keyframes adminTickOuterSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Admin avatar - profil fotosu yoksa mor arka plan */
+.avatar-big.admin-avatar,
+.feed-avatar-letter.admin-avatar,
+.reply-avatar.admin-avatar,
+.topic-avatar.admin-avatar,
+.topic-author-letter.admin-avatar,
+.reply-avatar-img.admin-avatar {
+  background: #7c3aed !important;
+  background-color: #7c3aed !important;
+  color: #fff !important;
+  border-color: rgba(124, 58, 237, 0.35) !important;
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35), 0 0 14px rgba(124, 58, 237, 0.2);
+}
 
 .foot-copy {
   font-size: 12.5px;
@@ -1182,6 +1345,42 @@ html[data-theme="dark"] .badge-banned { background: #4a2226; color: #ffcdd2; }
 html[data-theme="dark"] .badge-deleted { background: #2A2E2A; color: var(--ink-soft); }
 html[data-theme="dark"] .badge-count { background: #232824; color: var(--ink-soft); }
 html[data-theme="dark"] .feed-search-status { background: var(--paper-raised); border-color: var(--stone-line); color: var(--ink-soft); }
+
+/* admin username — dark mode — daha göz alıcı */
+html[data-theme="dark"] .admin-username {
+  color: #d8b4fe !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  text-shadow:
+    0 0 8px rgba(216, 180, 254, 0.95),
+    0 0 16px rgba(192, 132, 252, 0.75),
+    0 0 28px rgba(168, 85, 247, 0.55),
+    0 0 44px rgba(168, 85, 247, 0.38),
+    0 0 60px rgba(147, 51, 234, 0.3) !important;
+}
+
+html[data-theme="dark"] .avatar-big.admin-avatar,
+html[data-theme="dark"] .feed-avatar-letter.admin-avatar,
+html[data-theme="dark"] .reply-avatar.admin-avatar,
+html[data-theme="dark"] .topic-avatar.admin-avatar,
+html[data-theme="dark"] .topic-author-letter.admin-avatar {
+  background: #7c3aed !important;
+  background-color: #7c3aed !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.45), 0 0 16px rgba(124, 58, 237, 0.3);
+}
+
+/* dark mode tick outer glow slightly stronger — kare çerçeve yok, sadece tırtıklı dişli */
+html[data-theme="dark"] .admin-tick-outer {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 50%;
+  box-shadow: none !important;
+  filter:
+    drop-shadow(0 0 8px rgba(192, 132, 252, 0.7))
+    drop-shadow(0 0 16px rgba(168, 85, 247, 0.5))
+    drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35));
+}
 
 /* avatar popup */
 html[data-theme="dark"] .avatar-popup-inner { background: #1E2320; }

@@ -4,6 +4,11 @@ const PASSWORD_REGEX: RegExp = /^.{8,100}$/;
 const PHONE_REGEX: RegExp = /^[\d\s()+\-\s]{7,20}$/;
 const SALARY_REGEX: RegExp = /^[\d\s.,\-₺$€₼]{0,50}$/;
 
+export const RESERVED_USERNAMES: readonly string[] = ["admin","kurucu","owner"];
+
+export const isReservedUsername = (username: string): boolean =>
+    RESERVED_USERNAMES.includes(username.trim().toLowerCase());
+
 export const validateEmail = (email: string): boolean => EMAIL_REGEX.test(email);
 
 export const validateUsername = (username: string): boolean => USERNAME_REGEX.test(username);

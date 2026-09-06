@@ -5,7 +5,7 @@ import crypto from "crypto";
 import User from "../models/user.js";
 import PasswordReset from "../models/passwordReset.js";
 import { destroyUserSessions, destroyStaleUserSessions } from "../config/session.js";
-import { validateEmail, validateUsername, validatePassword } from "../helpers/validation.js";
+import { validateEmail, validateUsername, validatePassword, isReservedUsername } from "../helpers/validation.js";
 import { sendResetEmail } from "../services/mail.js";
 import { sequelize } from "../database/connection.js";
 import { error } from "../log/logger.js";
@@ -106,7 +106,11 @@ export const signup_post = async (req: Request, res: Response): Promise<void> =>
     const errors: Record<string, string> = {};
 
     if (!validateEmail(email)) errors.email = "Geçerli bir e-posta adresi giriniz.";
-    if (!validateUsername(username)) errors.username = "Kullanıcı adı 2-50 karakter olmalıdır (harf, rakam, _, -).";
+    if (!validateUsername(username)) {
+        errors.username = "Kullanıcı adı 2-50 karakter olmalıdır (harf, rakam, _, -).";
+    } else if (isReservedUsername(username)) {
+        errors.username = "Bu kullanıcı adı alınamaz.";
+    }
     if (!validatePassword(password)) errors.password = "Şifre en az 8 karakter olmalıdır.";
 
     if (Object.keys(errors).length > 0) {

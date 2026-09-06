@@ -17,6 +17,15 @@ const isAdminUser = async (userId: number): Promise<boolean> => {
     return user?.role === "admin";
 };
 
+const sortRepliesAdminFirst = <T extends { User?: { role?: string } | null; createdAt: any }>(replies: T[]): T[] => {
+    return [...replies].sort((a, b) => {
+        const aIsAdmin = (a as any).User?.role === "admin" ? 0 : 1;
+        const bIsAdmin = (b as any).User?.role === "admin" ? 0 : 1;
+        if (aIsAdmin !== bIsAdmin) return aIsAdmin - bIsAdmin;
+        return new Date((a as any).createdAt).getTime() - new Date((b as any).createdAt).getTime();
+    });
+};
+
 const getSafeForumRedirect = (redirect: unknown): string => {
     if (typeof redirect !== "string") return "/forum";
     if (redirect === "/forum" || redirect === "/forum/akis") return redirect;
@@ -51,7 +60,7 @@ export const listGet = async (req: Request, res: Response): Promise<void> => {
     const limit = 10;
     const posts = await Post.findAll({
         include: [
-            { model: User, attributes: ["id", "username", "profileImage"] },
+            { model: User, attributes: ["id", "username", "profileImage", "role"] },
             { model: PostCategory, attributes: ["name"] }
         ],
         order: [["createdAt", "DESC"]],
@@ -92,7 +101,7 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
 
     const post = await Post.findByPk(postId, {
         include: [
-            { model: User, attributes: ["id", "username", "profileImage"] },
+            { model: User, attributes: ["id", "username", "profileImage", "role"] },
             { model: PostCategory, attributes: ["name"] }
         ]
     });
@@ -120,12 +129,13 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
         userLiked = !!like;
     }
 
-    const replies = await PostReply.findAll({
+    const allRepliesRaw = await PostReply.findAll({
         where: { postId },
-        include: [{ model: User, attributes: ["id", "username", "profileImage"] }],
-        order: [["createdAt", "ASC"]],
-        limit: 10
+        include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
+        order: [["createdAt", "ASC"]]
     });
+    const sortedAllReplies = sortRepliesAdminFirst(allRepliesRaw as any);
+    const replies = sortedAllReplies.slice(0, 10) as any;
 
     const totalReplies = await PostReply.count({ where: { postId } });
 
@@ -134,7 +144,7 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
     if (pu) {
         avatarMap[pu.id] = optimizeUrl(pu.profileImage, 36, 36);
     }
-    replies.forEach(r => {
+    replies.forEach((r: any) => {
         const ru = (r as any).User;
         if (ru && !(ru.id in avatarMap)) {
             avatarMap[ru.id] = optimizeUrl(ru.profileImage, 28, 28);
@@ -152,7 +162,7 @@ export const getAkisData = async (req: Request, where: Record<string, unknown> =
     const posts = await Post.findAll({
         where: Object.keys(where).length ? where : undefined,
         include: [
-            { model: User, attributes: ["id", "username", "profileImage"] },
+            { model: User, attributes: ["id", "username", "profileImage", "role"] },
             { model: PostCategory, attributes: ["name"] }
         ],
         order: [["createdAt", "DESC"]],
@@ -178,11 +188,12 @@ export const getAkisData = async (req: Request, where: Record<string, unknown> =
     const replyCounts: Record<number, number> = {};
 
     if (postIds.length > 0) {
-        const allReplies = await PostReply.findAll({
+        const allRepliesRaw = await PostReply.findAll({
             where: { postId: postIds },
-            include: [{ model: User, attributes: ["id", "username", "profileImage"] }],
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
             order: [["createdAt", "ASC"]]
         });
+        const allReplies = sortRepliesAdminFirst(allRepliesRaw as any) as any;
 
         for (const reply of allReplies) {
             const ru = (reply as any).User;

@@ -19,6 +19,15 @@ import { slugify } from "../helpers/slug.js";
 import { error } from "../log/logger.js";
 import { normalizeError } from "../helpers/normalizeError.js";
 
+const sortRepliesAdminFirst = <T extends { User?: { role?: string } | null; createdAt: any }>(replies: T[]): T[] => {
+    return [...replies].sort((a, b) => {
+        const aIsAdmin = (a as any).User?.role === "admin" ? 0 : 1;
+        const bIsAdmin = (b as any).User?.role === "admin" ? 0 : 1;
+        if (aIsAdmin !== bIsAdmin) return aIsAdmin - bIsAdmin;
+        return new Date((a as any).createdAt).getTime() - new Date((b as any).createdAt).getTime();
+    });
+};
+
 const ALLOWED_MIMES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -54,7 +63,7 @@ export const home_get = async (req: Request, res: Response): Promise<void> => {
     const [recentPosts, jobs, postCount, jobCount, categories, categoryCountRows] = await Promise.all([
         Post.findAll({
             include: [
-                { model: User, attributes: ["id", "username", "profileImage"] },
+                { model: User, attributes: ["id", "username", "profileImage", "role"] },
                 { model: PostCategory, attributes: ["name"] }
             ],
             order: [["createdAt", "DESC"]],
@@ -100,11 +109,12 @@ export const home_get = async (req: Request, res: Response): Promise<void> => {
     const replyCounts: Record<number, number> = {};
 
     if (postIds.length > 0) {
-        const allReplies = await PostReply.findAll({
+        const allRepliesRaw = await PostReply.findAll({
             where: { postId: postIds },
-            include: [{ model: User, attributes: ["id", "username", "profileImage"] }],
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
             order: [["createdAt", "ASC"]]
         });
+        const allReplies = sortRepliesAdminFirst(allRepliesRaw as any) as any;
 
         for (const reply of allReplies) {
             const ru = (reply as any).User;
@@ -427,7 +437,7 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
     }
 
     const user = await User.findByPk(req.session.userId, {
-        attributes: ["email", "username", "createdAt", "profileImage"]
+        attributes: ["email", "username", "createdAt", "profileImage", "role"]
     });
 
     if (!user) {
@@ -448,5 +458,60 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
 
     const postCount = await Post.count({ where: { userId: req.session.userId } });
 
-    res.status(200).render("user/profile", { user, savedJobs, myJobs, postCount, userId: req.session.userId, username: user.username });
+    // Kullanıcının paylaştığı postlar + beğeni/yanıt verileri (profil için)
+    const myPosts = await Post.findAll({
+        where: { userId: req.session.userId },
+        include: [
+            { model: PostCategory, attributes: ["name"] },
+            { model: User, attributes: ["id", "username", "profileImage", "role"] }
+        ],
+        order: [["createdAt", "DESC"]]
+    });
+
+    let myPostUserLikedMap: Record<number, boolean> = {};
+    const repliesByPost: Record<number, PostReply[]> = {};
+    const replyCounts: Record<number, number> = {};
+    const myPostAvatarMap: Record<number, string | null> = {};
+
+    if (myPosts.length > 0) {
+        const myPostIds = myPosts.map(p => p.id);
+        const likes = await PostLike.findAll({ where: { userId: req.session.userId, postId: myPostIds } });
+        likes.forEach(l => { myPostUserLikedMap[l.postId] = true; });
+
+        const allRepliesRaw = await PostReply.findAll({
+            where: { postId: myPostIds },
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
+            order: [["createdAt", "ASC"]]
+        });
+        const sorted = sortRepliesAdminFirst(allRepliesRaw as any) as any[];
+        for (const reply of sorted) {
+            const ru = (reply as any).User;
+            if (ru && !(ru.id in myPostAvatarMap)) {
+                myPostAvatarMap[ru.id] = optimizeUrl(ru.profileImage, 28, 28);
+            }
+            const pid = (reply as any).postId;
+            if (!repliesByPost[pid]) {
+                repliesByPost[pid] = [];
+                replyCounts[pid] = 0;
+            }
+            replyCounts[pid]++;
+            if (repliesByPost[pid].length < 3) {
+                repliesByPost[pid].push(reply);
+            }
+        }
+    }
+
+    res.status(200).render("user/profile", {
+        user,
+        savedJobs,
+        myJobs,
+        postCount,
+        userId: req.session.userId,
+        username: user.username,
+        myPosts,
+        repliesByPost,
+        replyCounts,
+        myPostAvatarMap,
+        myPostUserLikedMap
+    });
 };;
