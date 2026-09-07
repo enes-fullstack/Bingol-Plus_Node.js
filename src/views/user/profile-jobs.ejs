@@ -26,7 +26,7 @@
       <div class="section">
         <div class="section-head">
           <h2>İlanlarım</h2>
-          <span class="count">(<%= myJobs.length %>)</span>
+          <span class="count">(<%= typeof jobCount !== 'undefined' ? jobCount : myJobs.length %>)</span>
         </div>
 
         <% if (myJobs.length > 0) { %>
@@ -48,7 +48,11 @@
             <div class="job-desc"><%= job.description %></div>
             <div class="job-footer">
               <span class="mono"><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
-              <div style="display:flex;gap:8px;margin-left:auto;">
+              <div style="display:flex;gap:8px;margin-left:auto; flex-wrap:wrap; align-items:center;">
+                <% const appCount = (typeof applicationCounts !== 'undefined' && applicationCounts[job.id]) ? applicationCounts[job.id] : 0; %>
+                <a href="/profilim/ilanlarim/<%= job.id %>/basvurular" class="btn btn-ghost btn-sm" style="<%= appCount > 0 ? 'border-color:var(--lake); color:var(--lake-deep);' : '' %>">
+                  Başvurular<% if (appCount > 0) { %> <span style="background:var(--lake); color:#fff; padding:1px 6px; border-radius:999px; font-size:11px; margin-left:4px;"><%= appCount %></span><% } else { %> (0)<% } %>
+                </a>
                 <a href="/ilanlar/<%= job.id %>/<%= slugify(job.title) %>" class="btn btn-solid btn-sm">Görüntüle</a>
                 <form method="POST" action="/ilanlar/sil/<%= job.id %>" data-title="<%= job.title %>" style="display:inline;">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -61,6 +65,22 @@
         </div>
         <% } else { %>
         <div class="empty">Henüz yayınladığınız ilan bulunmuyor. <a href="/ilanlar/ilan-ekle">İlan ekleyin</a>.</div>
+        <% } %>
+
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+          <div class="pagination" style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:24px; font-size:13px;">
+            <% if (page > 1) { %>
+              <a href="/profilim/ilanlarim?page=<%= page-1 %>" style="color:var(--lake-deep); font-weight:500;">← Önceki</a>
+            <% } else { %>
+              <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">← Önceki</span>
+            <% } %>
+            <span>Sayfa <%= page %> / <%= totalPages %></span>
+            <% if (page < totalPages) { %>
+              <a href="/profilim/ilanlarim?page=<%= page+1 %>" style="color:var(--lake-deep); font-weight:500;">Sonraki →</a>
+            <% } else { %>
+              <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">Sonraki →</span>
+            <% } %>
+          </div>
         <% } %>
       </div>
     </main>

@@ -59,6 +59,12 @@
         </button>
       </div>
 
+      <button class="save-post-btn <%= (typeof userSaved !== 'undefined' && userSaved) ? 'saved' : '' %>" data-post-id="<%= post.id %>" aria-label="Kaydet" title="<%= (typeof userSaved !== 'undefined' && userSaved) ? 'Kaydedildi' : 'Kaydet' %>">
+        <svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" fill="<%= (typeof userSaved !== 'undefined' && userSaved) ? 'currentColor' : 'none' %>" stroke="currentColor">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+        </svg>
+      </button>
+
       <div id="repliesSection" style="display:none;">
         <% if (userId) { %>
         <div id="replyForm" class="reply-form">

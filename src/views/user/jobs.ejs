@@ -2,8 +2,9 @@
 <html lang="tr">
 
 <head>
-  <%- include('../partials/head', { title: 'İş İlanları - Bingöl Plus', description: 'Bingöl\'deki güncel iş ilanları. Yerel firmaların iş fırsatlarını görüntüleyin ve başvurun.' }) %>
-  <title>İş İlanları - Bingöl Plus</title>
+  <% const jobsPageSuffix = (typeof page !== 'undefined' && page > 1) ? ` - Sayfa ${page}` : ''; %>
+  <%- include('../partials/head', { title: `İş İlanları${jobsPageSuffix} - Bingöl Plus`, description: `Bingöl'deki güncel iş ilanları${jobsPageSuffix}. Yerel firmaların iş fırsatlarını görüntüleyin ve başvurun.` }) %>
+  <title>İş İlanları<%= jobsPageSuffix %> - Bingöl Plus</title>
   <link rel="stylesheet" href="/css/jobs.css">
 </head>
 
@@ -61,6 +62,22 @@
         <p>Henüz iş ilanı bulunmuyor.</p>
         <p>Yeni bir ilan eklendiğinde burada listelenecek.</p>
       </div>
+      <% } %>
+
+      <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+        <div class="pagination" style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:24px; font-size:13px;">
+          <% if (page > 1) { %>
+            <a href="/ilanlar?page=<%= page-1 %>" style="color:var(--lake-deep); font-weight:500;">← Önceki</a>
+          <% } else { %>
+            <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">← Önceki</span>
+          <% } %>
+          <span>Sayfa <%= page %> / <%= totalPages %></span>
+          <% if (page < totalPages) { %>
+            <a href="/ilanlar?page=<%= page+1 %>" style="color:var(--lake-deep); font-weight:500;">Sonraki →</a>
+          <% } else { %>
+            <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">Sonraki →</span>
+          <% } %>
+        </div>
       <% } %>
 
     </main>

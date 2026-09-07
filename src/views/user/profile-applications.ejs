@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Başvurularım - Bingöl Plus', description: 'Bingöl Plus başvurularım sayfası.' }) %>
+  <title>Başvurularım - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/profile.css">
+  <style>
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .status-inceleniyor { background: #fff3cd; color: #856404; border-color: #ffeaa7; }
+    .status-kabul_edildi { background: #d4edda; color: #155724; border-color: #c3e6cb; text-transform: none; white-space: normal; max-width: 300px; text-align: center; line-height: 1.4; font-size: 12px; }
+    .status-reddedildi { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    html[data-theme="dark"] .status-inceleniyor { background: #4a3f1a; color: #ffe69c; border-color: #6b5900; }
+    html[data-theme="dark"] .status-kabul_edildi { background: #1a3a1f; color: #a3d9a5; border-color: #2d5a32; }
+    html[data-theme="dark"] .status-reddedildi { background: #4a1e22; color: #ffb3b8; border-color: #6b2a2e; }
+    .wrap, main, .section { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+    .app-card {
+      background: #fff;
+      border: 1px solid var(--stone-line);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break:break-word;
+    }
+    .app-card + .app-card { margin-top: 14px; }
+    html[data-theme="dark"] .app-card { background: #1E2320; border-color: var(--stone-line); }
+    .app-meta { font-size: 13px; color: var(--ink-soft); margin-top: 6px; display:flex; gap:12px; flex-wrap:wrap; min-width:0; overflow-wrap: anywhere; max-width:100%; }
+    .app-detail-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 14px; padding-top:14px; border-top:1px solid var(--stone-line); font-size:13.5px; min-width:0; max-width:100%; }
+    .app-detail-grid div { overflow-wrap:anywhere; word-break:break-word; overflow-wrap:break-word; min-width:0; overflow:hidden; max-width:100%; }
+    .ek-notlar-text { display:block; white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-all; hyphens:auto; min-width:0; max-width:100%; width:100%; box-sizing:border-box; margin-top:4px; line-height:1.6; overflow:hidden; }
+    .status-badge { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+    @media(max-width:640px){
+      .wrap { padding:0 14px; }
+      .app-card{ padding:14px 12px; }
+      .app-detail-grid{grid-template-columns:1fr; gap:8px; }
+      .app-detail-grid div { font-size:13px; }
+      .ek-notlar-text { font-size:13px; }
+      .app-card > div[style*="display:flex"] { flex-direction:column; align-items:flex-start !important; }
+      .status-badge{ max-width:100%; font-size:10.5px; white-space:normal; text-align:left; }
+    }
+    @media(max-width:400px){
+      .app-card{ padding:12px 10px; }
+      .wrap{ padding:0 10px; }
+    }
+  </style>
+</head>
+
+<body data-user-logged-in="<%= typeof userId !== 'undefined' && userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'profilim' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <a href="/profilim">Profilim</a>
+      <span>/</span>
+      <span class="mono">Başvurularım</span>
+    </div>
+    <a href="/profilim" class="top-link">← Profilime Dön</a>
+
+    <main>
+      <div class="section">
+        <div class="section-head">
+          <h2>Başvurularım</h2>
+          <span class="count">(<%= applications.length %>)</span>
+        </div>
+
+        <% if (applications.length > 0) { %>
+          <% applications.forEach(app => { %>
+            <div class="app-card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; min-width:0;">
+                <div style="min-width:0; flex:1; overflow-wrap:anywhere;">
+                  <div style="font-size:17px; font-weight:700; overflow-wrap:anywhere; word-break:break-word;">
+                    <a href="/ilanlar/<%= app.Job.id %>/<%= slugify(app.Job.title) %>" style="color:inherit; text-decoration:none; overflow-wrap:anywhere; word-break:break-word;"><%= app.Job.title %></a>
+                  </div>
+                  <div class="app-meta">
+                    <span><%= app.Job.company %> · <%= app.Job.location %></span>
+                    <span class="mono"><%= new Date(app.createdAt).toLocaleDateString("tr-TR") %></span>
+                  </div>
+                </div>
+                <%
+                  let badgeClass = 'status-inceleniyor';
+                  let badgeText = 'İnceleniyor';
+                  if (app.status === 'kabul_edildi') { badgeClass = 'status-kabul_edildi'; badgeText = 'Kabul edildi. İş veren en yakın zamanda sizinle iletişime geçecektir.'; }
+                  else if (app.status === 'reddedildi') { badgeClass = 'status-reddedildi'; badgeText = 'Reddedildi'; }
+                %>
+                <span class="status-badge <%= badgeClass %>"><%= badgeText %></span>
+              </div>
+              <div class="app-detail-grid">
+                <div><strong>Ad Soyad:</strong> <%= app.ad %> <%= app.soyad %></div>
+                <div><strong>E-posta:</strong> <%= app.email %></div>
+                <div><strong>Telefon:</strong> <%= app.telefon %></div>
+                <div><strong>İl / İlçe:</strong> <%= app.ilIlce %></div>
+                <div><strong>Yaş:</strong> <%= app.yas %></div>
+                <div><strong>Medeni Durum:</strong> <%= app.medeniDurumu %></div>
+                <div><strong>Öğrenim:</strong> <%= app.ogrenimDurumu %></div>
+                <div><strong>Sürücü Belgesi:</strong> <%= app.surucuBelgesi %></div>
+                <div><strong>Yabancı Dil:</strong> <%= app.yabanciDil %></div>
+                <% if (app.ekNotlar) { %><div style="grid-column:1 / -1; min-width:0; overflow:hidden;"><strong>Ek Notlar:</strong> <span class="ek-notlar-text"><%= app.ekNotlar %></span></div><% } %>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="empty">Henüz bir başvuruda bulunmadınız. <a href="/ilanlar">İlanları görüntüle</a>.</div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+
+</html>

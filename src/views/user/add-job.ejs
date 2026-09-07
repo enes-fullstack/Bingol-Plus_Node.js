@@ -19,7 +19,7 @@
             <circle cx="12" cy="12" r="10" />
             <path d="M12 6v6l4 2" />
           </svg>
-          <h2 style="font-size:18px;margin:0 0 6px;">İlanınız İnceleniyor</h2>
+          <h2 style="font-size:18px;margin:0 0 6px;">İlanınız İnceleniyor...</h2>
           <p style="font-size:14px;color:var(--ink-soft);margin:0;">Daha önce gönderdiğiniz ilan talebi admin onayı bekliyor. Onaylandığında yayınlanacaktır.</p>
         </div>
       <% } else { %>
@@ -45,12 +45,6 @@
           <label for="location">İl/İlçe <span style="color:var(--clay);">*</span></label>
           <input type="text" id="location" name="location" placeholder="Örn: Bingöl Merkez" data-required="true">
           <div class="field-error" id="location-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.location) ? locals.flash.errors.location : '' %></div>
-        </div>
-
-        <div class="form-group">
-          <label for="phone">İletişim (Telefon Numarası)</label>
-          <input type="text" id="phone" name="phone" placeholder="Örn: 0500 000 00 00" data-type="phone">
-          <div class="field-error" id="phone-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.phone) ? locals.flash.errors.phone : '' %></div>
         </div>
 
         <div class="form-group">

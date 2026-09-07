@@ -1,12 +1,14 @@
 import User from "../models/user.js";
 import Job from "../models/jobs.js";
 import SavedJob from "../models/savedJobs.js";
+import SavedPost from "../models/savedPost.js";
 import Post from "../models/post.js";
 import PostCategory from "../models/postCategory.js";
 import PostLike from "../models/postLike.js";
 import PostReply from "../models/postReply.js";
 import PasswordReset from "../models/passwordReset.js";
 import JobRequest from "../models/jobRequest.js";
+import JobApplication from "../models/jobApplication.js";
 
 export const defineRelationships = (): void => {
     User.hasMany(SavedJob, { foreignKey: "userId" });
@@ -14,6 +16,12 @@ export const defineRelationships = (): void => {
 
     Job.hasMany(SavedJob, { foreignKey: "jobId" });
     SavedJob.belongsTo(Job, { foreignKey: "jobId" });
+
+    User.hasMany(SavedPost, { foreignKey: "userId" });
+    SavedPost.belongsTo(User, { foreignKey: "userId" });
+
+    Post.hasMany(SavedPost, { foreignKey: "postId" });
+    SavedPost.belongsTo(Post, { foreignKey: "postId" });
 
     User.hasMany(Post, { foreignKey: "userId" });
     Post.belongsTo(User, { foreignKey: "userId" });
@@ -38,4 +46,10 @@ export const defineRelationships = (): void => {
 
     User.hasMany(JobRequest, { foreignKey: "userId" });
     JobRequest.belongsTo(User, { foreignKey: "userId" });
+
+    User.hasMany(JobApplication, { foreignKey: "userId" });
+    JobApplication.belongsTo(User, { foreignKey: "userId" });
+
+    Job.hasMany(JobApplication, { foreignKey: "jobId" });
+    JobApplication.belongsTo(Job, { foreignKey: "jobId" });
 };

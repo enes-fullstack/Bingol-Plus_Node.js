@@ -21,7 +21,6 @@
       <div><strong>Gönderen:</strong> <%= request.User.username %></div>
       <div><strong>Tarih:</strong> <span class="mono"><%= new Date(request.createdAt).toLocaleDateString("tr-TR") %></span></div>
       <div><strong>Maaş:</strong> <%= request.salary || 'Belirtilmemiş' %></div>
-      <div><strong>Telefon:</strong> <%= request.phone || 'Belirtilmemiş' %></div>
       <div><strong>Çalışma Şekli:</strong> <%= request.type || 'Belirtilmemiş' %></div>
     </div>
 

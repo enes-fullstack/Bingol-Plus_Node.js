@@ -611,6 +611,70 @@ html[data-theme="dark"] .profile-posts .action-btn.delete-btn:hover {
   color: var(--lake-deep);
 }
 
+/* ---------- BOOKMARK SAVE POST ---------- */
+.save-post-btn {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--stone-line);
+  background: var(--paper-raised);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+  flex: none;
+  z-index: 1;
+}
+
+.save-post-btn:hover {
+  border-color: var(--lake);
+  color: var(--lake-deep);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.save-post-btn.saved {
+  background: rgba(27, 111, 118, 0.12);
+  border-color: var(--lake);
+  color: var(--lake-deep);
+}
+
+.save-post-btn.saved:hover {
+  background: rgba(27, 111, 118, 0.18);
+  border-color: var(--lake-deep);
+  color: var(--lake-deep);
+}
+
+.save-post-btn svg { pointer-events: none; }
+
+html[data-theme="dark"] .save-post-btn {
+  background: #232824;
+  border-color: var(--stone-line);
+  color: var(--ink-soft);
+}
+
+html[data-theme="dark"] .save-post-btn:hover {
+  border-color: var(--lake);
+  color: var(--lake-deep);
+  background: #1E2320;
+}
+
+html[data-theme="dark"] .save-post-btn.saved {
+  background: rgba(58, 173, 90, 0.14);
+  border-color: var(--lake);
+  color: var(--lake-deep);
+}
+
+html[data-theme="dark"] .save-post-btn.saved:hover {
+  background: rgba(58, 173, 90, 0.22);
+  border-color: var(--lake);
+}
+
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 640px) {
   .stat-grid { grid-template-columns: 1fr; }

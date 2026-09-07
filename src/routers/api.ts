@@ -8,6 +8,7 @@ import { apiLimiter, forumLimiter, generalLimiter } from "../middleware/rateLimi
 router.get("/api/posts", generalLimiter, apiController.getPosts);
 router.get("/api/arama", generalLimiter, apiController.searchPosts);
 router.post("/api/ilan-kaydet/:jobId", requireAuth, apiLimiter, apiController.toggleSave);
+router.post("/api/post-kaydet/:postId", requireAuth, apiLimiter, apiController.toggleSavedPost);
 router.post("/api/post-begen/:postId", requireAuth, apiLimiter, apiController.toggleLike);
 router.post("/api/yanit-ekle/:postId", requireAuth, forumLimiter, apiController.addReply);
 router.get("/api/yanitlar/:postId", generalLimiter, apiController.getReplies);

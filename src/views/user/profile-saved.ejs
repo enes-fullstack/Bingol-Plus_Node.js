@@ -26,7 +26,7 @@
       <div class="section">
         <div class="section-head">
           <h2>Kaydedilen İlanlar</h2>
-          <span class="count" id="savedCount">(<%= savedJobs.length %>)</span>
+          <span class="count" id="savedCount">(<%= typeof totalSaved !== 'undefined' ? totalSaved : savedJobs.length %>)</span>
         </div>
 
         <% if (savedJobs.length > 0) { %>
@@ -60,6 +60,22 @@
         </div>
         <% } else { %>
         <div class="empty">Henüz kaydedilmiş ilan bulunmuyor. <a href="/ilanlar">İlanlara göz at</a>.</div>
+        <% } %>
+
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+          <div class="pagination" style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:24px; font-size:13px;">
+            <% if (page > 1) { %>
+              <a href="/profilim/kaydedilenler?page=<%= page-1 %>" style="color:var(--lake-deep); font-weight:500;">← Önceki</a>
+            <% } else { %>
+              <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">← Önceki</span>
+            <% } %>
+            <span>Sayfa <%= page %> / <%= totalPages %></span>
+            <% if (page < totalPages) { %>
+              <a href="/profilim/kaydedilenler?page=<%= page+1 %>" style="color:var(--lake-deep); font-weight:500;">Sonraki →</a>
+            <% } else { %>
+              <span class="disabled" style="color:var(--ink-soft); pointer-events:none;">Sonraki →</span>
+            <% } %>
+          </div>
         <% } %>
       </div>
     </main>

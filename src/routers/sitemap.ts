@@ -2,6 +2,7 @@ import { Router } from "express";
 import Post from "../models/post.js";
 import Job from "../models/jobs.js";
 import { slugify } from "../helpers/slug.js";
+import { sitemapLimiter } from "../middleware/rateLimit.js";
 
 const router = Router();
 
@@ -14,7 +15,19 @@ function escapeXml(value: string): string {
     .replace(/'/g, "&apos;");
 }
 
-router.get("/sitemap.xml", async (req, res) => {
+// Server-side cache: 1 saat (3600s)
+let cachedXml: string | null = null;
+let cachedAt = 0;
+const SITEMAP_CACHE_MS = 60 * 60 * 1000;
+
+router.get("/sitemap.xml", sitemapLimiter, async (req, res) => {
+  // Cache hit
+  if (cachedXml && Date.now() - cachedAt < SITEMAP_CACHE_MS) {
+    res.header("Content-Type", "application/xml; charset=utf-8");
+    res.header("Cache-Control", "public, max-age=3600");
+    res.send(cachedXml);
+    return;
+  }
   try {
     const posts = await Post.findAll({ attributes: ["id", "title", "updatedAt"] });
     const jobs = await Job.findAll({ attributes: ["id", "title", "updatedAt"] });
@@ -74,6 +87,8 @@ router.get("/sitemap.xml", async (req, res) => {
 
     res.header("Content-Type", "application/xml; charset=utf-8");
     res.header("Cache-Control", "public, max-age=3600");
+    cachedXml = xml;
+    cachedAt = Date.now();
     res.send(xml);
   } catch (err) {
     console.log("Error Code:", 6001);

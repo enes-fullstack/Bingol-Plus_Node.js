@@ -8,8 +8,10 @@ import PostLike from "../models/postLike.js";
 import PostReply from "../models/postReply.js";
 import Job from "../models/jobs.js";
 import SavedJob from "../models/savedJobs.js";
+import SavedPost from "../models/savedPost.js";
 import PasswordReset from "../models/passwordReset.js";
 import JobRequest from "../models/jobRequest.js";
+import JobApplication from "../models/jobApplication.js";
 import Log from "../models/log.js";
 import { sequelize } from "../database/connection.js";
 import { destroyUserSessions } from "../config/session.js";
@@ -47,7 +49,7 @@ export const createJobGet = async (req: Request, res: Response): Promise<void> =
 };
 
 export const createJobPost = async (req: Request, res: Response): Promise<void> => {
-    const errors = validateJobForm(req.body);
+    const errors = validateJobForm(req.body as Record<string, unknown>);
     if (Object.keys(errors).length > 0) {
         req.session.flash = { type: "error", message: "Lütfen aşağıdaki hataları düzeltin.", errors: errors as Record<string, string> };
         res.redirect("/admin/ilan-ekle");
@@ -57,15 +59,19 @@ export const createJobPost = async (req: Request, res: Response): Promise<void> 
     if (!req.session.userId) return;
 
     try {
-        const { title, description, company, location, salary, phone, type } = req.body;
+        const titleRaw = (req.body as any).title;
+        const descriptionRaw = (req.body as any).description;
+        const companyRaw = (req.body as any).company;
+        const locationRaw = (req.body as any).location;
+        const salaryRaw = (req.body as any).salary;
+        const typeRaw = (req.body as any).type;
         await Job.create({
-            title: title.trim(),
-            description: description.trim(),
-            company: company.trim(),
-            location: location.trim(),
-            salary: salary?.trim() || null,
-            phone: phone?.trim() || null,
-            type: type?.trim() || null,
+            title: typeof titleRaw === "string" ? titleRaw.trim() : "",
+            description: typeof descriptionRaw === "string" ? descriptionRaw.trim() : "",
+            company: typeof companyRaw === "string" ? companyRaw.trim() : "",
+            location: typeof locationRaw === "string" ? locationRaw.trim() : "",
+            salary: typeof salaryRaw === "string" ? salaryRaw.trim() || null : null,
+            type: typeof typeRaw === "string" ? typeRaw.trim() || null : null,
             userId: req.session.userId
         });
 
@@ -99,7 +105,7 @@ export const editJobPost = async (req: Request, res: Response): Promise<void> =>
     const id = Number(req.params.id);
     if (!id || isNaN(id)) { res.redirect("/admin/ilan-ekle"); return; }
 
-    const errors = validateJobForm(req.body);
+    const errors = validateJobForm(req.body as Record<string, unknown>);
     if (Object.keys(errors).length > 0) {
         req.session.flash = { type: "error", message: "Lütfen aşağıdaki hataları düzeltin.", errors: errors as Record<string, string> };
         res.redirect(`/admin/ilan-duzenle/${id}`);
@@ -114,15 +120,19 @@ export const editJobPost = async (req: Request, res: Response): Promise<void> =>
             return;
         }
 
-        const { title, description, company, location, salary, phone, type } = req.body;
+        const titleRaw = (req.body as any).title;
+        const descriptionRaw = (req.body as any).description;
+        const companyRaw = (req.body as any).company;
+        const locationRaw = (req.body as any).location;
+        const salaryRaw = (req.body as any).salary;
+        const typeRaw = (req.body as any).type;
         await job.update({
-            title: title.trim(),
-            description: description.trim(),
-            company: company.trim(),
-            location: location.trim(),
-            salary: salary?.trim() || null,
-            phone: phone?.trim() || null,
-            type: type?.trim() || null
+            title: typeof titleRaw === "string" ? titleRaw.trim() : "",
+            description: typeof descriptionRaw === "string" ? descriptionRaw.trim() : "",
+            company: typeof companyRaw === "string" ? companyRaw.trim() : "",
+            location: typeof locationRaw === "string" ? locationRaw.trim() : "",
+            salary: typeof salaryRaw === "string" ? salaryRaw.trim() || null : null,
+            type: typeof typeRaw === "string" ? typeRaw.trim() || null : null
         });
 
         success(`İlan güncellendi (ID: ${id})`);
@@ -149,6 +159,7 @@ export const jobDeletePost = async (req: Request, res: Response): Promise<void> 
         }
 
         await SavedJob.destroy({ where: { jobId: id } });
+        await JobApplication.destroy({ where: { jobId: id } });
         await job.destroy();
 
         success(`İlan silindi: ${job.title} (ID: ${id})`);
@@ -217,7 +228,6 @@ export const requestApprovePost = async (req: Request, res: Response): Promise<v
             company: jobRequest.company,
             location: jobRequest.location,
             salary: jobRequest.salary,
-            phone: jobRequest.phone,
             type: jobRequest.type,
             userId: jobRequest.userId
         });
@@ -449,9 +459,11 @@ export const userDeletePost = async (req: Request, res: Response): Promise<void>
         }
 
         await SavedJob.destroy({ where: { userId: id } });
+        await SavedPost.destroy({ where: { userId: id } });
         await PostLike.destroy({ where: { userId: id } });
         await PostReply.destroy({ where: { userId: id } });
         await Post.destroy({ where: { userId: id } });
+        await JobApplication.destroy({ where: { userId: id } });
         await Job.destroy({ where: { userId: id } });
         await PasswordReset.destroy({ where: { userId: id } });
         await JobRequest.destroy({ where: { userId: id } });
@@ -485,6 +497,7 @@ export const topicDeletePost = async (req: Request, res: Response): Promise<void
     try {
         await PostLike.destroy({ where: { postId } });
         await PostReply.destroy({ where: { postId } });
+        await SavedPost.destroy({ where: { postId } });
         await Post.destroy({ where: { id: postId } });
 
         req.session.flash = { type: "success", message: "Konu başarıyla silindi." };
@@ -619,7 +632,8 @@ export const categoriesGet = async (req: Request, res: Response): Promise<void> 
 };
 
 export const categoryCreatePost = async (req: Request, res: Response): Promise<void> => {
-    const name = (req.body.name || "").trim();
+    const rawName = (req.body as any).name;
+    const name = typeof rawName === "string" ? rawName.trim() : "";
     if (!name) {
         req.session.flash = { type: "error", message: "Kategori adı boş olamaz." };
         res.redirect("/admin/kategoriler");

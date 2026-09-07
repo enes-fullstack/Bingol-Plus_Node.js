@@ -56,20 +56,31 @@ describe("GET /forum", () => {
 
 describe("GET /forum/konu/:id", () => {
     it("200 ile detay sayfasını döner", async () => {
-        const res = await request(app).get(`/forum/konu/${postId}`);
+        const { default: Post } = await import("../../src/models/post.js");
+        const { slugify } = await import("../../src/helpers/slug.js");
+        const post = await Post.findByPk(postId);
+        const slug = slugify((post as any).title);
+        const res = await request(app).get(`/forum/konu/${postId}/${slug}`);
         expect(res.status).toBe(200);
         expect(res.text).toContain("Kış Hazırlıkları");
     });
 
+    it("slug olmadan 301 redirect döner", async () => {
+        const res = await request(app).get(`/forum/konu/${postId}`);
+        expect(res.status).toBe(301);
+        expect(res.headers.location).toContain(`/forum/konu/${postId}/`);
+    });
+
     it("var olmayan postId ile 404 döner", async () => {
-        const res = await request(app).get("/forum/konu/999");
+        const res = await request(app).get("/forum/konu/999/bos-slug");
         expect(res.status).toBe(404);
         expect(res.text).toContain("Sayfa Bulunamadı");
     });
 
-    it("geçersiz id ile /forum yönlendirir", async () => {
+    it("geçersiz id ile 404 döner", async () => {
         const res = await request(app).get("/forum/konu/abc");
-        expectRedirect(res, "/forum");
+        expect(res.status).toBe(404);
+        expect(res.text).toContain("Sayfa Bulunamadı");
     });
 });
 

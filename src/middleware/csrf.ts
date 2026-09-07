@@ -41,11 +41,29 @@ export const csrfMiddleware = (req: Request, res: Response, next: NextFunction):
         return;
     }
 
-    // File upload: body is not yet parsed by multer at this stage;
-    // CSRF check is deferred to the controller after multer parses the form.
+    // File upload: multer öncesi RAM tüketimini engellemek için
+    // CSRF header'ı burada kontrol edilir. Header yoksa ve istek
+    // multipart değilse (urlencoded/json) body'deki _csrf de kontrol edilir.
+    // Multipart + header yoksa 403 ile reddedilir, böylece 5MB'lık dosya
+    // memory'e alınmadan engellenir.
     if (req.path === "/profilim/resim-yukle") {
-        res.locals.csrfToken = generateTokenFromSecret(req.session.csrfSecret!);
-        next();
+        const headerToken = req.headers["csrf-token"] as string | undefined;
+        if (headerToken && validateToken(headerToken, req.session.csrfSecret!)) {
+            res.locals.csrfToken = generateTokenFromSecret(req.session.csrfSecret!);
+            next();
+            return;
+        }
+        const ct = (req.headers["content-type"] || "") as string;
+        const isMultipart = ct.includes("multipart/form-data");
+        if (!isMultipart) {
+            const bodyToken = (req.body as any)?._csrf as string | undefined;
+            if (bodyToken && validateToken(bodyToken, req.session.csrfSecret!)) {
+                res.locals.csrfToken = generateTokenFromSecret(req.session.csrfSecret!);
+                next();
+                return;
+            }
+        }
+        res.status(403).send("CSRF token mismatch");
         return;
     }
 

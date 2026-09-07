@@ -5,6 +5,7 @@ import User from "../models/user.js";
 import PostCategory from "../models/postCategory.js";
 import PostLike from "../models/postLike.js";
 import PostReply from "../models/postReply.js";
+import SavedPost from "../models/savedPost.js";
 import { sequelize } from "../database/connection.js";
 import { optimizeUrl } from "../cloud/upload.js";
 import { validateForumForm } from "../helpers/validation.js";
@@ -95,7 +96,8 @@ export const listGet = async (req: Request, res: Response): Promise<void> => {
 export const detailGet = async (req: Request, res: Response): Promise<void> => {
     const postId = Number(req.params.id);
     if (!postId || isNaN(postId)) {
-        res.redirect("/forum");
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
         return;
     }
 
@@ -107,13 +109,14 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!post) {
+        res.locals.robots = "noindex, nofollow";
         res.status(404).render("user/error");
         return;
     }
 
     const correctSlug = slugify((post as any).title);
     const requestedSlug = (req.params as Record<string, string | undefined>).slug;
-    if (requestedSlug && requestedSlug !== correctSlug) {
+    if (!requestedSlug || requestedSlug !== correctSlug) {
         res.redirect(301, `/forum/konu/${post.id}/${correctSlug}`);
         return;
     }
@@ -124,18 +127,28 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
     res.locals.canonical = `${baseUrl}/forum/konu/${post.id}/${correctSlug}`;
 
     let userLiked = false;
+    let userSaved = false;
     if (req.session.userId) {
-        const like = await PostLike.findOne({ where: { userId: req.session.userId, postId } });
+        const [like, saved] = await Promise.all([
+            PostLike.findOne({ where: { userId: req.session.userId, postId } }),
+            SavedPost.findOne({ where: { userId: req.session.userId, postId } })
+        ]);
         userLiked = !!like;
+        userSaved = !!saved;
     }
 
+    // Pagination: DB seviyesinde limit/offset, admin yanıtları önce (mevcut davranışı korur)
     const allRepliesRaw = await PostReply.findAll({
         where: { postId },
         include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
-        order: [["createdAt", "ASC"]]
+        order: [
+            [sequelize.literal(`CASE WHEN \`User\`.\`role\` = 'admin' THEN 0 ELSE 1 END`), "ASC"],
+            ["createdAt", "ASC"]
+        ],
+        limit: 10,
+        offset: 0
     });
-    const sortedAllReplies = sortRepliesAdminFirst(allRepliesRaw as any);
-    const replies = sortedAllReplies.slice(0, 10) as any;
+    const replies = allRepliesRaw as any;
 
     const totalReplies = await PostReply.count({ where: { postId } });
 
@@ -151,7 +164,7 @@ export const detailGet = async (req: Request, res: Response): Promise<void> => {
         }
     });
 
-    res.status(200).render("forum/detail", { post, userLiked, userId: req.session.userId || null, replies, totalReplies, avatarMap });
+    res.status(200).render("forum/detail", { post, userLiked, userSaved, userId: req.session.userId || null, replies, totalReplies, avatarMap });
 };
 
 interface AvatarMap { [userId: number]: string | null; }
@@ -178,9 +191,14 @@ export const getAkisData = async (req: Request, where: Record<string, unknown> =
     });
 
     let userLikedMap: Record<number, boolean> = {};
+    let userSavedPostMap: Record<number, boolean> = {};
     if (req.session.userId) {
-        const likes = await PostLike.findAll({ where: { userId: req.session.userId } });
+        const [likes, savedPosts] = await Promise.all([
+            PostLike.findAll({ where: { userId: req.session.userId } }),
+            SavedPost.findAll({ where: { userId: req.session.userId } })
+        ]);
         likes.forEach(l => { userLikedMap[l.postId] = true; });
+        savedPosts.forEach(s => { userSavedPostMap[s.postId] = true; });
     }
 
     const postIds = posts.map(p => p.id);
@@ -214,7 +232,7 @@ export const getAkisData = async (req: Request, where: Record<string, unknown> =
 
     const total = await Post.count({ where: Object.keys(where).length ? where : undefined });
 
-    return { posts, avatarMap, userLikedMap, repliesByPost, replyCounts, hasMore: total > limit, initialOffset: limit };
+    return { posts, avatarMap, userLikedMap, userSavedPostMap, repliesByPost, replyCounts, hasMore: total > limit, initialOffset: limit };
 };
 
 export const feedGet = async (req: Request, res: Response): Promise<void> => {
@@ -288,11 +306,13 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
         return;
     }
 
-    const { title, content, categoryId } = req.body;
-    const numericCategoryId = Number(categoryId);
-    const oldInput = { title: (title || "").trim(), content: (content || "").trim(), categoryId: isNaN(numericCategoryId) ? "" : numericCategoryId };
+    const rawTitle = (req.body as any).title;
+    const rawContent = (req.body as any).content;
+    const rawCategoryId = (req.body as any).categoryId;
+    const numericCategoryId = Number(rawCategoryId);
+    const oldInput = { title: typeof rawTitle === "string" ? rawTitle.trim() : "", content: typeof rawContent === "string" ? rawContent.trim() : "", categoryId: isNaN(numericCategoryId) ? "" : numericCategoryId };
 
-    const errors = validateForumForm(req.body);
+    const errors = validateForumForm(req.body as Record<string, unknown>);
 
     const category = !isNaN(numericCategoryId) ? await PostCategory.findByPk(numericCategoryId) : null;
     if (!category) {
@@ -311,8 +331,8 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
     try {
         await Post.create({
             userId: req.session.userId,
-            title: title.trim(),
-            content: content.trim(),
+            title: typeof rawTitle === "string" ? rawTitle.trim() : "",
+            content: typeof rawContent === "string" ? rawContent.trim() : "",
             categoryId: category.id
         });
 

@@ -52,9 +52,15 @@ describe("GET /ilanlar", () => {
 
 describe("GET /ilanlar/:id", () => {
     it("200 ile ilan detayını döner", async () => {
-        const res = await request(app).get("/ilanlar/1");
+        const res = await request(app).get("/ilanlar/1/web-gelistirici");
         expect(res.status).toBe(200);
         expect(res.text).toContain("Web Geliştirici");
+    });
+
+    it("slug olmadan 301 redirect döner", async () => {
+        const res = await request(app).get("/ilanlar/1");
+        expect(res.status).toBe(301);
+        expect(res.headers.location).toContain("/ilanlar/1/web-gelistirici");
     });
 
     it("var olmayan jobId ile 404 döner", async () => {
@@ -63,9 +69,10 @@ describe("GET /ilanlar/:id", () => {
         expect(res.text).toContain("Sayfa Bulunamadı");
     });
 
-    it("geçersiz id ile /ilanlar yönlendirir", async () => {
+    it("geçersiz id ile 404 döner", async () => {
         const res = await request(app).get("/ilanlar/abc");
-        expectRedirect(res, "/ilanlar");
+        expect(res.status).toBe(404);
+        expect(res.text).toContain("Sayfa Bulunamadı");
     });
 });
 

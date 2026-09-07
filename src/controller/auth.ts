@@ -87,6 +87,11 @@ export const login_post = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const logout_get = (req: Request, res: Response): void => {
+    // GET /cikis-yap artık state-changing değil — sadece anasayfaya yönlendir
+    res.redirect("/");
+};
+
+export const logout_post = (req: Request, res: Response): void => {
     req.session.destroy((err: unknown) => {
         if (err) {
             console.log("Error Code:", 2005);

@@ -82,6 +82,6 @@ export const sessionMiddleware = session({
         // "auto" -> https'te Secure, http'te değil; development http + production https ikisi de çalışır
         secure: process.env.NODE_ENV === "production" ? "auto" : false,
         sameSite: "lax",
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24 * 7
     }
 });

@@ -225,6 +225,72 @@
       .catch(function () { showToast("Bağlantı hatası"); });
   });
 
+  /* ── Save / Unsave Post (bookmark) ── */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".save-post-btn");
+    if (!btn) return;
+
+    if (document.body.dataset.userLoggedIn !== "true") {
+      showToast("Giriş yapmalısınız.");
+      return;
+    }
+
+    var postId = btn.dataset.postId;
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+    if (btn._saving) return;
+    btn._saving = true;
+
+    fetch("/api/post-kaydet/" + postId, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "csrf-token": csrfToken }
+    })
+      .then(function (r) {
+        return r.json().then(function (data) { return { status: r.status, data: data }; });
+      })
+      .then(function (res) {
+        var data = res.data;
+        if (res.status === 401) {
+          showToast(data.error || "Giriş yapmalısınız.");
+          return;
+        }
+        if (data.saved !== undefined) {
+          var isSaved = data.saved;
+          btn.classList.toggle("saved", isSaved);
+          var svg = btn.querySelector("svg");
+          if (svg) svg.setAttribute("fill", isSaved ? "currentColor" : "none");
+          btn.setAttribute("aria-label", isSaved ? "Kaydı kaldır" : "Kaydet");
+          btn.setAttribute("title", isSaved ? "Kaydedildi" : "Kaydet");
+          showToast(isSaved ? "Post kaydedildi" : "Post kayıttan kaldırıldı");
+          if (!isSaved && window.location.pathname === "/profilim/kaydedilen-postlar") {
+            var card = btn.closest(".post-card");
+            var countEl = document.getElementById("savedPostCount");
+            if (card) {
+              card.remove();
+              if (countEl) {
+                var match = countEl.textContent.match(/\((\d+)\)/);
+                if (match) {
+                  var newCount = parseInt(match[1], 10) - 1;
+                  countEl.textContent = "(" + newCount + ")";
+                  if (newCount === 0) {
+                    var list = document.getElementById("savedPostsList");
+                    if (list) {
+                      list.outerHTML = '<div class="empty">Henüz kaydedilmiş post bulunmuyor. <a href="/forum/akis">Foruma göz at</a>.</div>';
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          showToast(data.error || "Bir hata oluştu");
+        }
+      })
+      .catch(function () { showToast("Bağlantı hatası"); })
+      .finally(function () { btn._saving = false; });
+  });
+
   /* ── Job Card Click ── */
   document.addEventListener("click", function (e) {
     var card = e.target.closest(".job-card[data-href]");
@@ -330,13 +396,51 @@
 
     var avatarForm = document.getElementById("avatar-form");
     if (avatarForm && avatarSubmit) {
-      avatarForm.addEventListener("submit", function () {
+      avatarForm.addEventListener("submit", function (e) {
+        e.preventDefault();
         if (!avatarInput.files || !avatarInput.files[0]) return;
         if (avatarSubmit.disabled) return;
         avatarSubmit.textContent = "Yükleniyor...";
         avatarSubmit.disabled = true;
         avatarSubmit.style.opacity = "0.7";
         avatarSubmit.style.cursor = "wait";
+
+        var formData = new FormData(avatarForm);
+        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+        // Fallback to hidden input if meta missing
+        if (!csrfToken) {
+          var hidden = avatarForm.querySelector('input[name="_csrf"]');
+          if (hidden) csrfToken = hidden.value;
+        }
+
+        fetch(avatarForm.action, {
+          method: "POST",
+          headers: { "csrf-token": csrfToken },
+          body: formData
+        })
+          .then(function (res) {
+            // Server redirects with flash — follow redirect
+            if (res.redirected) {
+              window.location.href = res.url;
+            } else if (res.ok) {
+              window.location.href = "/profilim";
+            } else {
+              return res.text().then(function (t) {
+                avatarError.textContent = "Yükleme başarısız.";
+                avatarSubmit.textContent = "Yükle";
+                avatarSubmit.disabled = false;
+                avatarSubmit.style.opacity = "1";
+                avatarSubmit.style.cursor = "pointer";
+              });
+            }
+          })
+          .catch(function () {
+            avatarError.textContent = "Bağlantı hatası.";
+            avatarSubmit.textContent = "Yükle";
+            avatarSubmit.disabled = false;
+            avatarSubmit.style.opacity = "1";
+            avatarSubmit.style.cursor = "pointer";
+          });
       });
     }
   })();
@@ -799,6 +903,7 @@
         "<span>Yanıtlar" + (replyCount > 0 ? " (" + replyCount + ")" : "") + "</span>" +
         "</button>" +
         "</div>" +
+        '<button class="save-post-btn' + (post.userSaved ? ' saved' : '') + '" data-post-id="' + post.id + '" aria-label="' + (post.userSaved ? 'Kaydı kaldır' : 'Kaydet') + '" title="' + (post.userSaved ? 'Kaydedildi' : 'Kaydet') + '"><svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" fill="' + (post.userSaved ? 'currentColor' : 'none') + '" stroke="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg></button>' +
         '<div class="reply-section" style="display:none;">' +
         replyFormHtml +
         '<div class="replies-list">' + repliesHtml + "</div>" +
@@ -1228,7 +1333,6 @@
       company: { required: true, label: "Şirket adı zorunludur." },
       location: { required: true, label: "Konum zorunludur." },
       description: { required: true, label: "İş açıklaması zorunludur." },
-      phone: { phone: true, label: "Telefon numarası geçersiz." },
       salary: { salary: true, label: "Maaş bilgisi geçersiz." },
     };
 
@@ -1251,8 +1355,6 @@
         msg = rule.label;
       } else if (rule.email && val && !/^[^\s@]{1,94}@[^\s@]+\.[^\s@]{2,}$/.test(val)) {
         msg = rule.label;
-      } else if (rule.phone && val && !/^[\d\s()+\-\s]{7,20}$/.test(val)) {
-        msg = rule.label;
       } else if (rule.salary && val && !/^[\d\s.,\-₺$€₼]{0,50}$/.test(val)) {
         msg = rule.label;
       }
@@ -1261,7 +1363,7 @@
       return !msg;
     }
 
-    var fields = ["title", "company", "location", "description", "email", "phone", "salary"];
+    var fields = ["title", "company", "location", "description", "email", "salary"];
     fields.forEach(function (name) {
       var input = form.elements[name];
       if (input) {
@@ -1274,6 +1376,43 @@
       var valid = true;
       fields.forEach(function (name) { if (!validateField(name)) valid = false; });
       if (!valid) e.preventDefault();
+    });
+  })();
+
+  /* ── Job Application: Toggle Form (detail page) ── */
+  (function () {
+    var btn = document.getElementById("apply-toggle-btn");
+    var wrap = document.getElementById("application-form-wrap");
+    if (!btn || !wrap) return;
+
+    var isLoggedIn = document.body.getAttribute("data-user-logged-in") === "true";
+
+    // Eğer server flash hatası varsa otomatik aç (validation errors)
+    var hasErrors = wrap.querySelector('.field-error[style*="block"]');
+    if (hasErrors) {
+      wrap.classList.add("open");
+      btn.innerHTML =
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg> Kapat';
+    }
+
+    btn.addEventListener("click", function () {
+      if (!isLoggedIn) {
+        window.location.href = "/giris-yap";
+        return;
+      }
+      var isOpen = wrap.classList.contains("open");
+      if (isOpen) {
+        wrap.classList.remove("open");
+        btn.innerHTML =
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-3-3"/><path d="M19 14V8"/></svg> Başvur';
+      } else {
+        wrap.classList.add("open");
+        btn.innerHTML =
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg> Kapat';
+        setTimeout(function () {
+          wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 300);
+      }
     });
   })();
 })();

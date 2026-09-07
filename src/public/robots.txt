@@ -3,5 +3,11 @@ Allow: /
 Disallow: /admin
 Disallow: /profilim
 Disallow: /api/
+Disallow: /kayit-ol
+Disallow: /giris-yap
+Disallow: /sifremi-unuttum
+Disallow: /sifre-sifirla/
+Disallow: /ilanlar/ilan-ekle
+Disallow: /forum/konu-ac
 
 Sitemap: https://bingolplus.com/sitemap.xml

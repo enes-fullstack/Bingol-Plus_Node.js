@@ -9,7 +9,6 @@ class Job extends Model<InferAttributes<Job>, InferCreationAttributes<Job>> {
     declare company: string;
     declare location: string;
     declare salary: string | null;
-    declare phone: string | null;
     declare type: string | null;
     declare userId: number;
     declare createdAt: CreationOptional<Date>;
@@ -40,10 +39,6 @@ Job.init({
         allowNull: false
     },
     salary: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    phone: {
         type: DataTypes.STRING,
         allowNull: true
     },

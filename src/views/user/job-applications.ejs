@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Başvurular - ' + job.title + ' | Bingöl Plus', description: 'İlan başvuruları' }) %>
+  <title>Başvurular - <%= job.title %> | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/profile.css">
+  <style>
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .status-inceleniyor { background: #fff3cd; color: #856404; border-color: #ffeaa7; }
+    .status-kabul_edildi { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+    .status-reddedildi { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    html[data-theme="dark"] .status-inceleniyor { background: #4a3f1a; color: #ffe69c; border-color: #6b5900; }
+    html[data-theme="dark"] .status-kabul_edildi { background: #1a3a1f; color: #a3d9a5; border-color: #2d5a32; }
+    html[data-theme="dark"] .status-reddedildi { background: #4a1e22; color: #ffb3b8; border-color: #6b2a2e; }
+    .app-status-text { font-size: 14px; font-weight: 600; padding: 8px 0; }
+    .app-status-text.kabul { color: #16a34a; }
+    .app-status-text.red { color: #dc2626; }
+    html[data-theme="dark"] .app-status-text.kabul { color: #4ade80; }
+    html[data-theme="dark"] .app-status-text.red { color: #f87171; }
+    .wrap, main, .section { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+    .app-card {
+      background: #fff;
+      border: 1px solid var(--stone-line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+    }
+    .app-card + .app-card { margin-top: 16px; }
+    html[data-theme="dark"] .app-card { background: #1E2320; border-color: var(--stone-line); }
+    .app-card { min-width:0; overflow:hidden; overflow-wrap:anywhere; word-break:break-word; }
+    .app-detail-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 14px; padding-top:14px; border-top:1px solid var(--stone-line); font-size:13.5px; min-width:0; max-width:100%; }
+    .app-detail-grid div { overflow-wrap:anywhere; word-break:break-word; overflow-wrap:break-word; min-width:0; overflow:hidden; max-width:100%; }
+    .ek-notlar-text { display:block; white-space:pre-wrap; overflow-wrap:anywhere; word-break:break-all; hyphens:auto; min-width:0; max-width:100%; width:100%; box-sizing:border-box; margin-top:4px; line-height:1.6; overflow:hidden; }
+    .app-actions { margin-top: 16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding-top:14px; border-top:1px solid var(--stone-line); }
+    .btn-accept {
+      background: #22c55e;
+      color: #fff;
+      border: 1px solid #22c55e;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    }
+    .btn-accept:hover { background: #16a34a; border-color: #16a34a; }
+    .btn-accept:active { transform: translateY(1px); }
+    .btn-reject {
+      background: #ef4444;
+      color: #fff;
+      border: 1px solid #ef4444;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    }
+    .btn-reject:hover { background: #dc2626; border-color: #dc2626; }
+    .btn-reject:active { transform: translateY(1px); }
+    html[data-theme="dark"] .btn-accept { background: #22c55e; border-color: #22c55e; color: #fff; }
+    html[data-theme="dark"] .btn-reject { background: #ef4444; border-color: #ef4444; color: #fff; }
+    @media(max-width:640px){
+      .wrap { padding:0 14px; }
+      .app-card{ padding:14px 12px; }
+      .app-detail-grid{grid-template-columns:1fr; gap:8px; }
+      .app-detail-grid div { font-size:13px; }
+      .ek-notlar-text { font-size:13px; }
+      .app-card > div[style*="display:flex"] { flex-direction:column; align-items:flex-start !important; }
+      .status-badge { max-width:100%; font-size:10.5px; white-space:normal; text-align:left; }
+    }
+    @media(max-width:400px){
+      .app-card{ padding:12px 10px; }
+      .wrap{ padding:0 10px; }
+    }
+  </style>
+</head>
+
+<body data-user-logged-in="<%= typeof userId !== 'undefined' && userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'profilim' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <a href="/profilim">Profilim</a>
+      <span>/</span>
+      <a href="/profilim/ilanlarim">İlanlarım</a>
+      <span>/</span>
+      <span class="mono" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;"><%= job.title %></span>
+    </div>
+    <a href="/profilim/ilanlarim" class="top-link">← İlanlarıma Dön</a>
+
+    <main>
+      <div class="section">
+        <div class="section-head">
+          <h2><%= job.title %> — Başvurular</h2>
+          <span class="count">(<%= applications.length %>)</span>
+        </div>
+        <p style="font-size:13.5px; color:var(--ink-soft); margin:-8px 0 18px;"><%= job.company %> · <%= job.location %></p>
+
+        <% if (applications.length > 0) { %>
+          <% applications.forEach(app => { %>
+            <div class="app-card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                <div>
+                  <div style="font-size:16px; font-weight:700;"><%= app.ad %> <%= app.soyad %></div>
+                  <div style="font-size:13px; color:var(--ink-soft); margin-top:4px;">
+                    Başvuru: <span class="mono"><%= new Date(app.createdAt).toLocaleDateString("tr-TR") %></span> · Kullanıcı: <strong><%= app.User.username %></strong> (<%= app.User.email %>)
+                  </div>
+                </div>
+                <%
+                  let badgeClass = 'status-inceleniyor';
+                  let badgeText = 'İnceleniyor';
+                  if (app.status === 'kabul_edildi') { badgeClass = 'status-kabul_edildi'; badgeText = 'Kabul Edildi'; }
+                  else if (app.status === 'reddedildi') { badgeClass = 'status-reddedildi'; badgeText = 'Reddedildi'; }
+                %>
+                <span class="status-badge <%= badgeClass %>"><%= badgeText %></span>
+              </div>
+
+              <div class="app-detail-grid">
+                <div><strong>E-posta:</strong> <%= app.email %></div>
+                <div><strong>Telefon:</strong> <%= app.telefon %></div>
+                <div><strong>İl / İlçe:</strong> <%= app.ilIlce %></div>
+                <div><strong>Yaş:</strong> <%= app.yas %></div>
+                <div><strong>Medeni Durum:</strong> <%= app.medeniDurumu %></div>
+                <div><strong>Öğrenim:</strong> <%= app.ogrenimDurumu %></div>
+                <div><strong>Sürücü Belgesi:</strong> <%= app.surucuBelgesi %></div>
+                <div><strong>Yabancı Dil:</strong> <%= app.yabanciDil %></div>
+                <% if (app.ekNotlar) { %><div style="grid-column:1 / -1; min-width:0; overflow:hidden;"><strong>Ek Notlar:</strong><br><span class="ek-notlar-text"><%= app.ekNotlar %></span></div><% } %>
+              </div>
+
+              <% if (app.status === 'inceleniyor') { %>
+              <div class="app-actions">
+                <form method="POST" action="/basvuru/<%= app.id %>/durum" style="display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="status" value="kabul_edildi">
+                  <button type="submit" class="btn-accept">Kabul Et</button>
+                </form>
+                <form method="POST" action="/basvuru/<%= app.id %>/durum" style="display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="status" value="reddedildi">
+                  <button type="submit" class="btn-reject">Reddet</button>
+                </form>
+              </div>
+              <% } else if (app.status === 'kabul_edildi') { %>
+              <div class="app-actions">
+                <span class="app-status-text kabul">Kabul ettiniz</span>
+              </div>
+              <% } else if (app.status === 'reddedildi') { %>
+              <div class="app-actions">
+                <span class="app-status-text red">Reddetiniz</span>
+              </div>
+              <% } %>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="empty">Bu ilana henüz başvuru yapılmamış.</div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+
+</html>

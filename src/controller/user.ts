@@ -6,7 +6,9 @@ import { Op } from "sequelize";
 import User from "../models/user.js";
 import Job from "../models/jobs.js";
 import JobRequest from "../models/jobRequest.js";
+import JobApplication from "../models/jobApplication.js";
 import SavedJob from "../models/savedJobs.js";
+import SavedPost from "../models/savedPost.js";
 import Post from "../models/post.js";
 import PostCategory from "../models/postCategory.js";
 import PostLike from "../models/postLike.js";
@@ -99,9 +101,14 @@ export const home_get = async (req: Request, res: Response): Promise<void> => {
     });
 
     let userLikedMap: Record<number, boolean> = {};
+    let userSavedPostMap: Record<number, boolean> = {};
     if (userId) {
-        const likes = await PostLike.findAll({ where: { userId } });
+        const [likes, savedPosts] = await Promise.all([
+            PostLike.findAll({ where: { userId } }),
+            SavedPost.findAll({ where: { userId } })
+        ]);
         likes.forEach(l => { userLikedMap[l.postId] = true; });
+        savedPosts.forEach(s => { userSavedPostMap[s.postId] = true; });
     }
 
     const postIds = recentPosts.map(p => p.id);
@@ -137,13 +144,21 @@ export const home_get = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).render("user/index", {
         username, userId, recentPosts, jobs, categories, isAdmin, jobCount, postCount, categoryCountMap,
-        posts: recentPosts, avatarMap, userLikedMap, repliesByPost, replyCounts,
+        posts: recentPosts, avatarMap, userLikedMap, userSavedPostMap, repliesByPost, replyCounts,
         hasMore, initialOffset: limit, slug: '', kategori: ''
     });
 };
 
 export const jobs_get = async (req: Request, res: Response): Promise<void> => {
-    const jobs = await Job.findAll({ order: [["createdAt", "DESC"]] });
+    const page = Math.min(100, Math.max(1, Number(req.query.page) || 1));
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: jobs } = await Job.findAndCountAll({
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset
+    });
 
     let savedJobIds: number[] = [];
     if (req.session.userId) {
@@ -154,25 +169,35 @@ export const jobs_get = async (req: Request, res: Response): Promise<void> => {
         savedJobIds = savedJobs.map(s => s.jobId);
     }
 
-    res.status(200).render("user/jobs", { jobs, savedJobIds, userId: req.session.userId || null });
+    const totalPages = Math.ceil(count / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
+        return;
+    }
+
+    res.status(200).render("user/jobs", { jobs, savedJobIds, userId: req.session.userId || null, page, totalPages });
 };
 
 export const job_detail_get = async (req: Request, res: Response): Promise<void> => {
     const jobId = Number(req.params.id);
     if (!jobId || isNaN(jobId)) {
-        res.redirect("/ilanlar");
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
         return;
     }
 
     const job = await Job.findByPk(jobId);
     if (!job) {
+        res.locals.robots = "noindex, nofollow";
         res.status(404).render("user/error");
         return;
     }
 
     const correctSlug = slugify(job.title);
     const requestedSlug = (req.params as Record<string, string | undefined>).slug;
-    if (requestedSlug && requestedSlug !== correctSlug) {
+    if (!requestedSlug || requestedSlug !== correctSlug) {
         res.redirect(301, `/ilanlar/${job.id}/${correctSlug}`);
         return;
     }
@@ -183,14 +208,26 @@ export const job_detail_get = async (req: Request, res: Response): Promise<void>
     res.locals.canonical = `${baseUrl}/ilanlar/${job.id}/${correctSlug}`;
 
     let isSaved = false;
+    let hasApplied = false;
+    let isOwner = false;
     if (req.session.userId) {
         const saved = await SavedJob.findOne({
             where: { userId: req.session.userId, jobId }
         });
         isSaved = !!saved;
+
+        if (job.userId === req.session.userId) {
+            isOwner = true;
+        } else {
+            const existingApp = await JobApplication.findOne({
+                where: { userId: req.session.userId, jobId },
+                attributes: ["id"],
+            });
+            hasApplied = !!existingApp;
+        }
     }
 
-    res.status(200).render("user/job-detail", { job, userId: req.session.userId || null, isSaved });
+    res.status(200).render("user/job-detail", { job, userId: req.session.userId || null, isSaved, hasApplied, isOwner });
 };
 
 export const ilan_ekle_get = async (req: Request, res: Response): Promise<void> => {
@@ -207,9 +244,7 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
         return;
     }
 
-    const { title, description, company, location, salary, phone, type } = req.body;
-
-    const errors = validateJobForm(req.body);
+    const errors = validateJobForm(req.body as Record<string, unknown>);
     if (Object.keys(errors).length > 0) {
         req.session.flash = { type: "error", message: "Lütfen aşağıdaki hataları düzeltin.", errors: errors as Record<string, string> };
         res.redirect("/ilanlar/ilan-ekle");
@@ -223,15 +258,21 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
         return;
     }
 
+    const titleRaw = (req.body as any).title;
+    const descriptionRaw = (req.body as any).description;
+    const companyRaw = (req.body as any).company;
+    const locationRaw = (req.body as any).location;
+    const salaryRaw = (req.body as any).salary;
+    const typeRaw = (req.body as any).type;
+
     try {
         await JobRequest.create({
-            title: title.trim(),
-            description: description.trim(),
-            company: company.trim(),
-            location: location.trim(),
-            salary: salary?.trim() || null,
-            phone: phone?.trim() || null,
-            type: type?.trim() || null,
+            title: typeof titleRaw === "string" ? titleRaw.trim() : "",
+            description: typeof descriptionRaw === "string" ? descriptionRaw.trim() : "",
+            company: typeof companyRaw === "string" ? companyRaw.trim() : "",
+            location: typeof locationRaw === "string" ? locationRaw.trim() : "",
+            salary: typeof salaryRaw === "string" ? salaryRaw.trim() || null : null,
+            type: typeof typeRaw === "string" ? typeRaw.trim() || null : null,
             userId: req.session.userId
         });
 
@@ -400,6 +441,7 @@ export const jobDelete_post = async (req: Request, res: Response): Promise<void>
         }
 
         await SavedJob.destroy({ where: { jobId: id } });
+        await JobApplication.destroy({ where: { jobId: id } });
         await job.destroy();
 
         req.session.flash = { type: "success", message: `"${job.title}" ilanınız silindi.` };
@@ -442,6 +484,7 @@ export const postDelete_post = async (req: Request, res: Response): Promise<void
 
         await PostLike.destroy({ where: { postId } });
         await PostReply.destroy({ where: { postId } });
+        await SavedPost.destroy({ where: { postId } });
         await post.destroy();
 
         req.session.flash = { type: "success", message: "Gönderiniz silindi." };
@@ -489,10 +532,12 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
         return;
     }
 
-    const [postCount, savedCount, myJobsCount] = await Promise.all([
+    const [postCount, savedCount, myJobsCount, savedPostCount, myApplicationsCount] = await Promise.all([
         Post.count({ where: { userId: req.session.userId } }),
         SavedJob.count({ where: { userId: req.session.userId } }),
-        Job.count({ where: { userId: req.session.userId } })
+        Job.count({ where: { userId: req.session.userId } }),
+        SavedPost.count({ where: { userId: req.session.userId } }),
+        JobApplication.count({ where: { userId: req.session.userId } })
     ]);
 
     res.status(200).render("user/profile", {
@@ -500,6 +545,8 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
         postCount,
         savedCount,
         myJobsCount,
+        savedPostCount,
+        myApplicationsCount,
         userId: req.session.userId,
         username: user.username
     });
@@ -519,26 +566,42 @@ export const profilePosts_get = async (req: Request, res: Response): Promise<voi
         return;
     }
 
-    const postCount = await Post.count({ where: { userId: req.session.userId } });
+    const page = Math.min(100, Math.max(1, Number(req.query.page) || 1));
+    const limit = 10;
+    const offset = (page - 1) * limit;
 
-    const myPosts = await Post.findAll({
+    const { count: postCount, rows: myPosts } = await Post.findAndCountAll({
         where: { userId: req.session.userId },
         include: [
             { model: PostCategory, attributes: ["name"] },
             { model: User, attributes: ["id", "username", "profileImage", "role"] }
         ],
-        order: [["createdAt", "DESC"]]
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset
     });
+    const totalPages = Math.ceil(postCount / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
+        return;
+    }
 
     let myPostUserLikedMap: Record<number, boolean> = {};
+    let myPostUserSavedMap: Record<number, boolean> = {};
     const repliesByPost: Record<number, PostReply[]> = {};
     const replyCounts: Record<number, number> = {};
     const myPostAvatarMap: Record<number, string | null> = {};
 
     if (myPosts.length > 0) {
         const myPostIds = myPosts.map(p => p.id);
-        const likes = await PostLike.findAll({ where: { userId: req.session.userId, postId: myPostIds } });
+        const [likes, saved] = await Promise.all([
+            PostLike.findAll({ where: { userId: req.session.userId, postId: myPostIds } }),
+            SavedPost.findAll({ where: { userId: req.session.userId, postId: myPostIds } })
+        ]);
         likes.forEach(l => { myPostUserLikedMap[l.postId] = true; });
+        saved.forEach(s => { myPostUserSavedMap[s.postId] = true; });
 
         const allRepliesRaw = await PostReply.findAll({
             where: { postId: myPostIds },
@@ -572,7 +635,10 @@ export const profilePosts_get = async (req: Request, res: Response): Promise<voi
         repliesByPost,
         replyCounts,
         myPostAvatarMap,
-        myPostUserLikedMap
+        myPostUserLikedMap,
+        myPostUserSavedMap,
+        page,
+        totalPages
     });
 };
 
@@ -590,14 +656,46 @@ export const profileJobs_get = async (req: Request, res: Response): Promise<void
         return;
     }
 
-    const myJobs = await Job.findAll({
+    const page = Math.min(100, Math.max(1, Number(req.query.page) || 1));
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const { count: jobCount, rows: myJobs } = await Job.findAndCountAll({
         where: { userId: req.session.userId },
-        order: [["createdAt", "DESC"]]
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset
     });
+    const totalPages = Math.ceil(jobCount / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
+        return;
+    }
+
+    // Başvuru sayıları (ilan sahibi görünümü için)
+    const applicationCounts: Record<number, number> = {};
+    if (myJobs.length > 0) {
+        const jobIds = myJobs.map(j => j.id);
+        const counts = await JobApplication.findAll({
+            attributes: ["jobId", [sequelize.fn("COUNT", sequelize.col("id")), "cnt"]],
+            where: { jobId: jobIds },
+            group: ["jobId"],
+            raw: true,
+        }) as any[];
+        counts.forEach((r: any) => {
+            applicationCounts[r.jobId] = Number(r.cnt);
+        });
+    }
 
     res.status(200).render("user/profile-jobs", {
         user,
         myJobs,
+        applicationCounts,
+        page,
+        totalPages,
+        jobCount,
         userId: req.session.userId,
         username: user.username
     });
@@ -617,16 +715,139 @@ export const profileSaved_get = async (req: Request, res: Response): Promise<voi
         return;
     }
 
-    const savedJobs = await SavedJob.findAll({
+    const page = Math.min(100, Math.max(1, Number(req.query.page) || 1));
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const { count: totalSaved, rows: savedJobs } = await SavedJob.findAndCountAll({
         where: { userId: req.session.userId },
-        include: [{ model: Job, attributes: ["id", "title", "description", "company", "location", "salary", "phone", "createdAt"] }],
-        order: [["createdAt", "DESC"]]
+        include: [{ model: Job, attributes: ["id", "title", "description", "company", "location", "salary", "createdAt"] }],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset
     });
+    const totalPages = Math.ceil(totalSaved / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
+        return;
+    }
 
     res.status(200).render("user/profile-saved", {
         user,
         savedJobs,
         userId: req.session.userId,
-        username: user.username
+        username: user.username,
+        page,
+        totalPages,
+        totalSaved
+    });
+};
+
+export const profileSavedPosts_get = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const user = await User.findByPk(req.session.userId, {
+        attributes: ["email", "username", "createdAt", "profileImage", "role"]
+    });
+    if (!user) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const page = Math.min(100, Math.max(1, Number(req.query.page) || 1));
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const { count: totalSavedPosts, rows: savedPostsRaw } = await SavedPost.findAndCountAll({
+        where: { userId: req.session.userId },
+        include: [
+            {
+                model: Post,
+                include: [
+                    { model: User, attributes: ["id", "username", "profileImage", "role"] },
+                    { model: PostCategory, attributes: ["name"] }
+                ]
+            }
+        ],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset
+    });
+    const totalPages = Math.ceil(totalSavedPosts / limit);
+
+    if (totalPages > 0 && page > totalPages) {
+        res.locals.robots = "noindex, nofollow";
+        res.status(404).render("user/error");
+        return;
+    }
+
+    const savedPosts = savedPostsRaw.map(sp => (sp as any).Post).filter(Boolean);
+
+    const avatarMap: Record<number, string | null> = {};
+    savedPosts.forEach(p => {
+        const pu: any = p.User;
+        if (pu) {
+            avatarMap[pu.id] = optimizeUrl(pu.profileImage, 24, 24);
+        }
+    });
+
+    let userLikedMap: Record<number, boolean> = {};
+    let userSavedPostMap: Record<number, boolean> = {};
+    if (savedPosts.length > 0) {
+        const postIds = savedPosts.map((p: any) => p.id);
+        const [likes, saved] = await Promise.all([
+            PostLike.findAll({ where: { userId: req.session.userId, postId: postIds } }),
+            SavedPost.findAll({ where: { userId: req.session.userId, postId: postIds } })
+        ]);
+        likes.forEach(l => { userLikedMap[l.postId] = true; });
+        saved.forEach(s => { userSavedPostMap[s.postId] = true; });
+    }
+
+    // replies for each saved post (3 cap + counts)
+    const repliesByPost: Record<number, PostReply[]> = {};
+    const replyCounts: Record<number, number> = {};
+    if (savedPosts.length > 0) {
+        const postIds = savedPosts.map((p: any) => p.id);
+        const allRepliesRaw = await PostReply.findAll({
+            where: { postId: postIds },
+            include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
+            order: [["createdAt", "ASC"]]
+        });
+        const allReplies = sortRepliesAdminFirst(allRepliesRaw as any) as any[];
+        for (const reply of allReplies) {
+            const ru = (reply as any).User;
+            if (ru && !(ru.id in avatarMap)) {
+                avatarMap[ru.id] = optimizeUrl(ru.profileImage, 28, 28);
+            }
+            const pid = (reply as any).postId;
+            if (!repliesByPost[pid]) {
+                repliesByPost[pid] = [];
+                replyCounts[pid] = 0;
+            }
+            replyCounts[pid]++;
+            if (repliesByPost[pid].length < 3) {
+                repliesByPost[pid].push(reply);
+            }
+        }
+    }
+
+    res.status(200).render("user/profile-saved-posts", {
+        user,
+        savedPosts,
+        avatarMap,
+        userLikedMap,
+        userSavedPostMap,
+        repliesByPost,
+        replyCounts,
+        userId: req.session.userId,
+        username: user.username,
+        page,
+        totalPages,
+        totalSavedPosts
     });
 };

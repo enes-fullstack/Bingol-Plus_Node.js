@@ -452,9 +452,14 @@ describe("Job detay slug", () => {
         expect(res.status).toBe(200);
         expect(res.text).toContain("Web Geliştirici");
     });
-    it("GET /ilanlar/abc -> redirect /ilanlar", async () => {
+    it("GET /ilanlar/:id slug olmadan 301 redirect", async () => {
+        const res = await request(app).get("/ilanlar/1");
+        expect(res.status).toBe(301);
+        expect(res.headers.location).toContain("/ilanlar/1/web-gelistirici");
+    });
+    it("GET /ilanlar/abc -> 404", async () => {
         const res = await request(app).get("/ilanlar/abc");
-        expect(res.status).toBe(302);
-        expect(res.headers.location).toBe("/ilanlar");
+        expect(res.status).toBe(404);
+        expect(res.text).toContain("Sayfa Bulunamadı");
     });
 });

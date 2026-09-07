@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
-import { Op } from "sequelize";
+import { Op, literal } from "sequelize";
+import { sequelize } from "../database/connection.js";
 
 import User from "../models/user.js";
 import PostCategory from "../models/postCategory.js";
 import SavedJob from "../models/savedJobs.js";
+import SavedPost from "../models/savedPost.js";
 import Job from "../models/jobs.js";
 import Post from "../models/post.js";
 import PostLike from "../models/postLike.js";
@@ -81,9 +83,14 @@ const fetchPostsWithMeta = async (
     }
 
     let userLikedMap: Record<number, boolean> = {};
+    let userSavedPostMap: Record<number, boolean> = {};
     if (req.session.userId) {
-        const likes = await PostLike.findAll({ where: { userId: req.session.userId } });
+        const [likes, savedPosts] = await Promise.all([
+            PostLike.findAll({ where: { userId: req.session.userId } }),
+            SavedPost.findAll({ where: { userId: req.session.userId } })
+        ]);
         likes.forEach(l => { userLikedMap[l.postId] = true; });
+        savedPosts.forEach(s => { userSavedPostMap[s.postId] = true; });
     }
 
     const posts = postsRaw.map(p => {
@@ -96,6 +103,7 @@ const fetchPostsWithMeta = async (
         plain.replies = repliesByPost[plain.id] || [];
         plain.replyCount = replyCounts[plain.id] || 0;
         plain.userLiked = !!userLikedMap[plain.id];
+        plain.userSaved = !!userSavedPostMap[plain.id];
         return plain;
     });
 
@@ -201,6 +209,43 @@ export const toggleSave = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
+export const toggleSavedPost = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.status(401).json({ saved: false, error: "Giriş yapmalısınız" });
+        return;
+    }
+
+    const postId: number = Number(req.params.postId);
+    const userId: number = req.session.userId;
+
+    if (!postId || isNaN(postId)) {
+        res.status(400).json({ saved: false, error: "Geçersiz post ID" });
+        return;
+    }
+
+    const postExists = await Post.findByPk(postId, { attributes: ["id"] });
+    if (!postExists) {
+        res.status(404).json({ saved: false, error: "Gönderi bulunamadı" });
+        return;
+    }
+
+    try {
+        const existing = await SavedPost.findOne({ where: { userId, postId } });
+
+        if (existing) {
+            await existing.destroy();
+            res.status(200).json({ saved: false });
+        } else {
+            await SavedPost.create({ userId, postId });
+            res.status(201).json({ saved: true });
+        }
+    } catch (err) {
+        console.log("Error Code:", 5007);
+        error(`Post kaydetme/kaldırma hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${normalizeError(err)}`);
+        res.status(500).json({ saved: false, error: "Bir hata oluştu" });
+    }
+};
+
 export const toggleLike = async (req: Request, res: Response): Promise<void> => {
     if (!req.session.userId) {
         res.status(401).json({ liked: false, error: "Giriş yapmalısınız" });
@@ -271,7 +316,7 @@ export const addReply = async (req: Request, res: Response): Promise<void> => {
         const reply = await PostReply.create({
             postId,
             userId: req.session.userId,
-            content: content.trim()
+            content: typeof content === "string" ? content.trim() : ""
         });
 
         const replyWithUser = await PostReply.findByPk(reply.id, {
@@ -302,15 +347,18 @@ export const getReplies = async (req: Request, res: Response): Promise<void> => 
     }
 
     try {
-        const allRepliesRaw = await PostReply.findAll({
+        const paginatedRaw = await PostReply.findAll({
             where: { postId },
             include: [{ model: User, attributes: ["id", "username", "profileImage", "role"] }],
-            order: [["createdAt", "ASC"]]
+            order: [
+                [sequelize.literal(`CASE WHEN \`User\`.\`role\` = 'admin' THEN 0 ELSE 1 END`), "ASC"],
+                ["createdAt", "ASC"]
+            ],
+            limit: 10,
+            offset
         });
-        const sorted = sortRepliesAdminFirst(allRepliesRaw as any);
-        const paginated = (sorted as any).slice(offset, offset + 10);
-        const plainReplies = paginated.map((r: any) => {
-            const plain: any = r.get ? r.get({ plain: true }) : r;
+        const plainReplies = paginatedRaw.map((r: any) => {
+            const plain: any = r.get({ plain: true });
             if (plain.User) {
                 plain.User.avatarUrl = optimizeUrl(plain.User.profileImage, 28, 28);
             }

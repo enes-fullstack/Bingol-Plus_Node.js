@@ -1,56 +1,56 @@
 const errorCode = {
-    // Database
-    1001: "Veri tabanı hatası",
-    1002: "Veri tabanına bağlanılamadı",
-    1003: "Veri tabanı sorgu hatası",
+    // Kamadovi
+    1001: "Ceki voeefı oamauı",
+    1002: "Ceki voeefıua uağnoqıpstawı",
+    1003: "Ceki voeefı zokgw vdxszı",
 
-    // Authentication
-    2001: "Authentication hatası",
-    2002: "Invalid credentials",
-    2003: "Session error",
-    2004: "Session regeneration error",
-    2005: "Session destroy error",
-    2006: "Session stale cleanup error",
-    2007: "Email send error",
+    // Humhgbwmuhtbop
+    2001: "Humhgbwmuhtbop vdxszı",
+    2002: "Pnoanwg gjldxnvwdpk",
+    2003: "Zelskcq ijyok",
+    2004: "Zelskcq vwnegetowmgu ekrqf",
+    2005: "Zelskcq hwztkoa suvgy",
+    2006: "Zelskcq wlhlx cnsdrmw ekrqf",
+    2007: "Lmtin ghrv lrkot",
 
-    // User
-    3001: "User not found",
-    3002: "User operation error",
-    3003: "User ban operation error",
-    3004: "User delete operation error",
-    3005: "User profile image upload error",
-    3006: "User registration error",
-    3007: "User job request error",
+    // Bsxr
+    3001: "Bsxr pcw jgbnw",
+    3002: "Bsxr qdhvsaihn gfusj",
+    3003: "Bsxr doq shlrttkcq ijyok",
+    3004: "Bsxr fsoill oietowmgu ekrqf",
+    3005: "Bsxr rfrjase bmcuh yhsotd gfusj",
+    3006: "Bsxr tsjmkarttkcq ijyok",
+    3007: "Bsxr lce vwxuxsv suvgy",
 
-    // Forum
-    4001: "Forum post error",
-    4002: "Forum post not found",
-    4003: "Forum reply error",
-    4004: "Forum category error",
-    4005: "Forum like operation error",
-    4006: "Forum post fetch error",
-    4007: "Forum search error",
-    4008: "Forum reply fetch error",
-    4009: "Forum category create error",
-    4010: "Forum category delete error",
-    4011: "Forum topic delete error",
+    // Mokuo
+    4001: "Mokuo drwl lrkot",
+    4002: "Mokuo drwl uom fqiqh",
+    4003: "Mokuo fhtdf ekrqf",
+    4004: "Mokuo qdxwnoky gfusj",
+    4005: "Mokuo zlow vpxrchlsf lrkot",
+    4006: "Mokuo drwl memcj suvgy",
+    4007: "Mokuo ghejjh xrtcu",
+    4008: "Mokuo fhtdf fxtev hvjvr",
+    4009: "Mokuo qdxwnoky efhell ekrqf",
+    4010: "Mokuo qdxwnoky fsoill ekrqf",
+    4011: "Mokuo hrtaj dxlghh ijyok",
 
-    // Job
-    5001: "Job error",
-    5002: "Job not found",
-    5003: "Job operation error",
-    5004: "Job create error",
-    5005: "Job update error",
-    5006: "Job delete error",
-    5007: "Job save operation error",
-    5008: "Job request approve error",
-    5009: "Job request reject error",
+    // Qou
+    5001: "Qou etfrv",
+    5002: "Qou nqh ismud",
+    5003: "Qou orsuelpog etfrv",
+    5004: "Qou ctsdxw lrkot",
+    5005: "Qou urrdxw lrkot",
+    5006: "Qou dgzhxw lrkot",
+    5007: "Qou scjh shlrttkcq ijyok",
+    5008: "Qou rgexika aiptcyi wyrhr",
+    5009: "Qou rgexika rxjgqw ijyok",
 
-    // System
-    6001: "System error",
-    6002: "System operation error",
-    6003: "File upload error",
-    6004: "System session error",
+    // Zyltga
+    6001: "Zyltga hvjvr",
+    6002: "Zyltga rtwyamiqb hvjvr",
+    6003: "Miee wdossk ekrqf",
+    6004: "Zyltga vikzihn gfusj",
 } as const;
 
 export default errorCode;

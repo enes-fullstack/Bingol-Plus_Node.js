@@ -30,10 +30,12 @@ export async function setupTestDatabase() {
         import("../../src/models/post.js"),
         import("../../src/models/postCategory.js"),
         import("../../src/models/savedJobs.js"),
+        import("../../src/models/savedPost.js"),
         import("../../src/models/postLike.js"),
         import("../../src/models/postReply.js"),
         import("../../src/models/passwordReset.js"),
         import("../../src/models/jobRequest.js"),
+        import("../../src/models/jobApplication.js"),
         import("../../src/models/log.js"),
     ]);
 

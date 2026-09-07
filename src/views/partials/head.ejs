@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>(function(){try{var t=localStorage.getItem("theme");if(t==="light"){document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.setAttribute("data-theme","dark");var m=document.querySelector('meta[name="color-scheme"]');if(m)m.content="dark";}}catch(e){}})();</script>
 <meta name="description" content="<%= description %>">
+<% if (typeof robots !== 'undefined' && robots) { %><meta name="robots" content="<%= robots %>"><% } %>
 <% if (typeof canonical !== 'undefined' && canonical) { %><link rel="canonical" href="<%= canonical %>"><% } %>
 <link rel="icon" type="image/webp" href="/images/small-logo.webp">
 <% if (typeof csrfToken !== 'undefined') { %>

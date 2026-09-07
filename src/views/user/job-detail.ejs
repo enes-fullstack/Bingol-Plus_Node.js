@@ -15,7 +15,7 @@
 
     <div class="detail-card">
       <h1><%= job.title %></h1>
-      <div class="detail-company"><%= job.company %> · <%= job.location %></div>
+      <div class="detail-company"><%= job.company %></div>
 
       <div class="detail-grid">
         <div class="detail-field">
@@ -23,8 +23,8 @@
           <span><%= job.salary ? job.salary + ' TL' : 'Belirtilmemiş' %></span>
         </div>
         <div class="detail-field">
-          <label>Telefon</label>
-          <span class="mono"><%= job.phone || 'Belirtilmemiş' %></span>
+          <label>İl / İlçe</label>
+          <span><%= job.location %></span>
         </div>
         <div class="detail-field">
           <label>Çalışma Şekli</label>
@@ -42,12 +42,122 @@
       </div>
 
       <div class="detail-actions">
-        <a href="tel:<%= job.phone %>" class="btn btn-solid" style="flex:1; justify-content:center;">Telefonla Ara</a>
         <button class="btn <%= isSaved ? 'btn-solid' : 'btn-ghost' %> save-btn-detail<%= isSaved ? ' saved' : '' %>" data-job-id="<%= job.id %>" style="flex:1; justify-content:center;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="<%= isSaved ? '#fff' : 'none' %>" stroke="<%= isSaved ? '#fff' : 'var(--ink)' %>" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg>
           <span class="save-text"><%= isSaved ? 'Kaydedildi' : 'Kaydet' %></span>
         </button>
+        <% if (typeof isOwner !== 'undefined' && isOwner) { %>
+          <span class="btn btn-ghost" style="flex:1; justify-content:center; opacity:.6; cursor:default; pointer-events:none;">Kendi İlanınız</span>
+        <% } else if (typeof hasApplied !== 'undefined' && hasApplied) { %>
+          <span class="btn btn-solid" style="flex:1; justify-content:center; opacity:.85; cursor:default; pointer-events:none; background: var(--lake);">Başvurdunuz ✓</span>
+        <% } else { %>
+          <button type="button" id="apply-toggle-btn" class="btn btn-solid" style="flex:1; justify-content:center; background: var(--ink); border-color: var(--ink); color: var(--paper);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-3-3"/><path d="M19 14V8"/></svg>
+            Başvur
+          </button>
+        <% } %>
       </div>
+
+      <% if (typeof isOwner !== 'undefined' && !isOwner && !(typeof hasApplied !== 'undefined' && hasApplied)) { %>
+      <div id="application-form-wrap" class="application-form-wrap">
+        <div class="application-card">
+          <h3>İlana Başvur</h3>
+          <p class="application-sub">Bilgilerinizi doldurun, başvurunuz ilan sahibine iletilecektir.</p>
+          <form id="job-application-form" method="POST" action="/ilanlar/<%= job.id %>/basvur" autocomplete="off" novalidate>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="app-grid">
+              <div class="form-group">
+                <label for="app-ad">Ad <span style="color:var(--clay);">*</span></label>
+                <input type="text" id="app-ad" name="ad" maxlength="50" required value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ad) ? locals.flash.oldInput.ad : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.ad) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.ad) ? locals.flash.errors.ad : '' %></div>
+              </div>
+              <div class="form-group">
+                <label for="app-soyad">Soyad <span style="color:var(--clay);">*</span></label>
+                <input type="text" id="app-soyad" name="soyad" maxlength="50" required value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.soyad) ? locals.flash.oldInput.soyad : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.soyad) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.soyad) ? locals.flash.errors.soyad : '' %></div>
+              </div>
+            </div>
+            <div class="app-grid">
+              <div class="form-group">
+                <label for="app-telefon">Cep Telefon No <span style="color:var(--clay);">*</span></label>
+                <input type="text" id="app-telefon" name="telefon" maxlength="20" required placeholder="örn: 0555 123 45 67" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.telefon) ? locals.flash.oldInput.telefon : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.telefon) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.telefon) ? locals.flash.errors.telefon : '' %></div>
+              </div>
+              <div class="form-group">
+                <label for="app-email">E-posta <span style="color:var(--clay);">*</span></label>
+                <input type="email" id="app-email" name="email" maxlength="100" required placeholder="örn: ad@ornek.com" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.email) ? locals.flash.oldInput.email : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.email) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.email) ? locals.flash.errors.email : '' %></div>
+              </div>
+            </div>
+            <div class="app-grid">
+              <div class="form-group">
+                <label for="app-ilIlce">İl / İlçe <span style="color:var(--clay);">*</span></label>
+                <input type="text" id="app-ilIlce" name="ilIlce" maxlength="100" required placeholder="örn: Bingöl Merkez" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ilIlce) ? locals.flash.oldInput.ilIlce : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.ilIlce) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.ilIlce) ? locals.flash.errors.ilIlce : '' %></div>
+              </div>
+              <div class="form-group">
+                <label for="app-yas">Yaş <span style="color:var(--clay);">*</span></label>
+                <input type="number" id="app-yas" name="yas" min="14" max="80" required placeholder="örn: 25" value="<%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yas) ? locals.flash.oldInput.yas : '' %>">
+                <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.yas) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.yas) ? locals.flash.errors.yas : '' %></div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Medeni Durumu <span style="color:var(--clay);">*</span></label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="medeniDurumu" value="Bekar" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.medeniDurumu === 'Bekar') ? 'checked' : '' %> required> Bekar</label>
+                <label class="radio-label"><input type="radio" name="medeniDurumu" value="Evli" <%= (locals.flash && locals.flash.oldInput && (locals.flash.oldInput.medeniDurumu === 'Evli' || locals.flash.oldInput.medeniDurumu === 'Medeni')) ? 'checked' : '' %> required> Evli</label>
+              </div>
+              <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.medeniDurumu) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.medeniDurumu) ? locals.flash.errors.medeniDurumu : '' %></div>
+            </div>
+
+            <div class="form-group">
+              <label for="app-ogrenim">Öğrenim Durumu <span style="color:var(--clay);">*</span></label>
+              <select id="app-ogrenim" name="ogrenimDurumu" required>
+                <option value="">Seçiniz</option>
+                <option value="İlköğretim" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'İlköğretim') ? 'selected' : '' %>>İlköğretim</option>
+                <option value="Ortaöğretim" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'Ortaöğretim') ? 'selected' : '' %>>Ortaöğretim</option>
+                <option value="Lise" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'Lise') ? 'selected' : '' %>>Lise</option>
+                <option value="Ön Lisans" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'Ön Lisans') ? 'selected' : '' %>>Ön Lisans</option>
+                <option value="Lisans" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'Lisans') ? 'selected' : '' %>>Lisans</option>
+                <option value="Eğitim Yok" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ogrenimDurumu === 'Eğitim Yok') ? 'selected' : '' %>>Eğitim Yok</option>
+              </select>
+              <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.ogrenimDurumu) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.ogrenimDurumu) ? locals.flash.errors.ogrenimDurumu : '' %></div>
+            </div>
+
+            <div class="form-group">
+              <label>Sürücü Belgesi <span style="color:var(--clay);">*</span></label>
+              <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="surucuBelgesi" value="Var" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.surucuBelgesi === 'Var') ? 'checked' : '' %> required> Var</label>
+                <label class="radio-label"><input type="radio" name="surucuBelgesi" value="Yok" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.surucuBelgesi === 'Yok') ? 'checked' : '' %> required> Yok</label>
+              </div>
+              <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.surucuBelgesi) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.surucuBelgesi) ? locals.flash.errors.surucuBelgesi : '' %></div>
+            </div>
+
+            <div class="form-group">
+              <label for="app-yabanciDil">Yabancı Dil <span style="color:var(--clay);">*</span></label>
+              <select id="app-yabanciDil" name="yabanciDil" required>
+                <option value="">Seçiniz</option>
+                <option value="Yok" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yabanciDil === 'Yok') ? 'selected' : '' %>>Yok</option>
+                <option value="İngilizce" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yabanciDil === 'İngilizce') ? 'selected' : '' %>>İngilizce</option>
+                <option value="Almanca" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yabanciDil === 'Almanca') ? 'selected' : '' %>>Almanca</option>
+                <option value="Arapça" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yabanciDil === 'Arapça') ? 'selected' : '' %>>Arapça</option>
+                <option value="Diğer" <%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.yabanciDil === 'Diğer') ? 'selected' : '' %>>Diğer</option>
+              </select>
+              <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.yabanciDil) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.yabanciDil) ? locals.flash.errors.yabanciDil : '' %></div>
+            </div>
+
+            <div class="form-group">
+              <label for="app-ekNotlar">Eklemek İstedikleriniz</label>
+              <textarea id="app-ekNotlar" name="ekNotlar" rows="4" maxlength="2000" placeholder="Kendinizi kısaca tanıtın, eklemek istediklerinizi yazın..."><%= (locals.flash && locals.flash.oldInput && locals.flash.oldInput.ekNotlar) ? locals.flash.oldInput.ekNotlar : '' %></textarea>
+              <div class="field-error" style="display:<%= (locals.flash && locals.flash.errors && locals.flash.errors.ekNotlar) ? 'block' : 'none' %>;"><%= (locals.flash && locals.flash.errors && locals.flash.errors.ekNotlar) ? locals.flash.errors.ekNotlar : '' %></div>
+            </div>
+
+            <button type="submit" class="btn btn-solid" style="width:100%; justify-content:center; padding:12px;">Başvuruyu Gönder</button>
+          </form>
+        </div>
+      </div>
+      <% } %>
     </div>
   </div>
 

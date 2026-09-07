@@ -22,7 +22,10 @@
       </button>
       <% if (typeof userId !== 'undefined' && userId) { %>
         <span class="nav-user"><%= username %></span>
-        <a href="/cikis-yap" class="btn btn-ghost btn-sm nav-desktop-auth">Çıkış Yap</a>
+        <form action="/cikis-yap" method="POST" style="display:inline; margin:0;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-ghost btn-sm nav-desktop-auth" style="cursor:pointer;">Çıkış Yap</button>
+        </form>
       <% } else { %>
         <a href="/giris-yap" class="btn btn-ghost btn-sm nav-desktop-auth">Giriş Yap</a>
         <a href="/kayit-ol" class="btn btn-solid btn-sm nav-desktop-auth">Kayıt Ol</a>
@@ -39,7 +42,10 @@
       <% if (typeof isAdmin !== 'undefined' && isAdmin) { %><a href="/admin" class="<%= page === 'admin' ? 'current' : '' %>">Admin</a><% } %>
       <% if (typeof userId !== 'undefined' && userId) { %>
         <a href="/profilim" class="<%= page === 'profilim' ? 'current' : '' %>">Profilim</a>
-        <a href="/cikis-yap">Çıkış Yap</a>
+        <form action="/cikis-yap" method="POST" style="margin:0;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" style="display:block; width:100%; text-align:left; background:none; border:none; padding:10px 12px; font-size:14px; font-weight:500; color:var(--ink-soft); cursor:pointer; font-family:inherit;">Çıkış Yap</button>
+        </form>
       <% } else { %>
         <a href="/giris-yap">Giriş Yap</a>
         <a href="/kayit-ol">Kayıt Ol</a>

@@ -9,7 +9,6 @@ class JobRequest extends Model<InferAttributes<JobRequest>, InferCreationAttribu
     declare company: string;
     declare location: string;
     declare salary: string | null;
-    declare phone: string | null;
     declare type: string | null;
     declare userId: number;
     declare status: CreationOptional<"pending" | "approved" | "rejected">;
@@ -41,10 +40,6 @@ JobRequest.init({
         allowNull: false
     },
     salary: {
-        type: DataTypes.STRING,
-        allowNull: true
-    },
-    phone: {
         type: DataTypes.STRING,
         allowNull: true
     },

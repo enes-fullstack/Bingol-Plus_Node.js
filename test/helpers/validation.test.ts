@@ -4,7 +4,6 @@ import {
     validateUsername,
     validatePassword,
     validateRequired,
-    validatePhone,
     validateSalary,
     validateReplyContent,
     validatePostTitle,
@@ -70,22 +69,6 @@ describe("validateRequired", () => {
         expect(validateRequired("")).toBe(false);
         expect(validateRequired("   ")).toBe(false);
         expect(validateRequired("   ")).toBe(false);
-    });
-});
-
-describe("validatePhone", () => {
-    it("boş telefonu kabul eder (opsiyonel)", () => {
-        expect(validatePhone("")).toBe(true);
-    });
-
-    it("geçerli telefon numarasını kabul eder", () => {
-        expect(validatePhone("05551234567")).toBe(true);
-        expect(validatePhone("+90 555 123 45 67")).toBe(true);
-        expect(validatePhone("(0212) 555 1234")).toBe(true);
-    });
-
-    it("geçersiz telefon numarasını reddeder", () => {
-        expect(validatePhone("abc")).toBe(false);
     });
 });
 
@@ -180,28 +163,6 @@ describe("validateJobForm", () => {
         expect(errors.description).toBeDefined();
     });
 
-    it("geçersiz telefon formatında hata döndürür", () => {
-        const errors = validateJobForm({
-            title: "Yazılım Geliştirici",
-            company: "Firma A",
-            location: "Bingöl",
-            description: "a".repeat(50),
-            phone: "abcXYZ!"
-        });
-        expect(errors.phone).toBeDefined();
-    });
-
-    it("geçerli telefon formatını kabul eder", () => {
-        const errors = validateJobForm({
-            title: "Yazılım Geliştirici",
-            company: "Firma A",
-            location: "Bingöl",
-            description: "a".repeat(50),
-            phone: "+90 555 123 45 67"
-        });
-        expect(errors.phone).toBeUndefined();
-    });
-
     it("geçersiz maaş formatında hata döndürür", () => {
         const errors = validateJobForm({
             title: "Yazılım Geliştirici",
@@ -230,10 +191,8 @@ describe("validateJobForm", () => {
             company: "Firma A",
             location: "Bingöl",
             description: "a".repeat(50),
-            phone: "",
             salary: ""
         });
-        expect(errors.phone).toBeUndefined();
         expect(errors.salary).toBeUndefined();
     });
 

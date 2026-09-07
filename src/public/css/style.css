@@ -1194,6 +1194,8 @@ html[data-theme="dark"] .save-btn.saved svg { stroke: #fff; fill: #fff; }
 /* generic cards & surfaces (covers detail.css, auth.css, page.css, profile.css, forum.css, etc) */
 html[data-theme="dark"] .post-card,
 html[data-theme="dark"] .detail-card,
+html[data-theme="dark"] .detail-grid,
+html[data-theme="dark"] .detail-section,
 html[data-theme="dark"] .form-card,
 html[data-theme="dark"] .auth-card,
 html[data-theme="dark"] .page-card,
@@ -1211,6 +1213,13 @@ html[data-theme="dark"] .job-card {
   border-color: var(--stone-line);
   box-shadow: var(--shadow);
 }
+html[data-theme="dark"] .detail-grid,
+html[data-theme="dark"] .detail-section,
+html[data-theme="dark"] .detail-section h2,
+html[data-theme="dark"] .detail-section p,
+html[data-theme="dark"] .detail-grid div,
+html[data-theme="dark"] .detail-grid strong { color: var(--ink); }
+html[data-theme="dark"] .detail-grid .mono { color: var(--ink-soft); }
 html[data-theme="dark"] .cat-card:hover { border-color: var(--lake); box-shadow: 0 8px 22px rgba(0,0,0,0.4); }
 html[data-theme="dark"] .cat-card-icon { background: var(--paper-raised); border-color: var(--stone-line); color: var(--lake-deep); }
 html[data-theme="dark"] .loading,

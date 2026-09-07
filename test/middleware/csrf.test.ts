@@ -121,11 +121,14 @@ describe("csrfMiddleware", () => {
         expect(called).toBe(true);
     });
 
-    it("/profilim/resim-yukle path'i CSRF'den muaf tutulur", () => {
+    it("/profilim/resim-yukle path'i CSRF header ile korunur (multipart öncesi)", () => {
+        const secret = crypto.randomBytes(32).toString("hex");
+        const validToken = createToken(secret);
         const req = mockReq({
             method: "POST",
             path: "/profilim/resim-yukle",
-            session: { csrfSecret: undefined }
+            session: { csrfSecret: secret },
+            headers: { "csrf-token": validToken, "content-type": "multipart/form-data; boundary=----test" }
         });
         const res = mockRes();
         let called = false;
@@ -134,6 +137,27 @@ describe("csrfMiddleware", () => {
 
         expect(called).toBe(true);
         expect(res.locals.csrfToken).toBeDefined();
+    });
+
+    it("/profilim/resim-yukle multipart header olmadan 403 döner", () => {
+        const secret = crypto.randomBytes(32).toString("hex");
+        const req = mockReq({
+            method: "POST",
+            path: "/profilim/resim-yukle",
+            session: { csrfSecret: secret },
+            headers: { "content-type": "multipart/form-data; boundary=----test" },
+            body: {}
+        });
+        let statusCode = 0;
+        const res = {
+            locals: {},
+            status: (code: number) => {
+                statusCode = code;
+                return { send: () => {} };
+            }
+        } as any;
+        csrfMiddleware(req, res, () => {});
+        expect(statusCode).toBe(403);
     });
 
     it("query param _csrf kabul edilmez (sadece body ve header)", () => {

@@ -25,8 +25,8 @@ import { sessionMiddleware } from "./config/session.js";
 app.set("view engine", "ejs");
 app.set("views", path.join(process.cwd(), "src", "views"));
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
+app.use(express.json({ limit: "100kb" }));
 
 app.use(express.static(path.join(process.cwd(), "src", "public")));
 
@@ -39,17 +39,18 @@ app.use(csrfMiddleware);
 
 // ENSURE SESSION PERSISTS BEFORE REDIRECT (flash race condition fix)
 app.use((req, res, next) => {
-    const origRedirect = res.redirect.bind(res) as (url: string) => void;
-    res.redirect = function (url: any): void {
-        if (req.session && req.session.flash) {
-            req.session.save((err: unknown) => {
+    const origRedirect = (res.redirect as any).bind(res);
+    (res as any).redirect = function (...args: any[]): void {
+        const hasFlash = !!(req.session && (req.session as any).flash);
+        if (hasFlash) {
+            (req.session as any).save((err: unknown) => {
                 if (err) {
                     error(`Session kaydedilirken hata: ${normalizeError(err)}`);
                 }
-                origRedirect(url);
+                origRedirect(...args);
             });
         } else {
-            origRedirect(url);
+            origRedirect(...args);
         }
     };
     next();
@@ -68,8 +69,35 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     const rawBase = process.env.SITE_URL || "https://bingolplus.com";
     const baseUrl = rawBase.replace(/\/$/, "");
-    // req.path is without querystring, normalized by Express
-    res.locals.canonical = baseUrl + req.path;
+    // Pagination (?page=N) self-canonical: page=1 → base path, page>1 → ?page=N
+    let canonical = baseUrl + req.path;
+    const rawPage = (req.query as any)?.page;
+    if (rawPage !== undefined) {
+        const pageStr = Array.isArray(rawPage) ? rawPage[0] : String(rawPage);
+        const p = Number(pageStr);
+        if (!isNaN(p) && p > 1 && p <= 100) {
+            canonical += `?page=${p}`;
+        }
+    }
+    res.locals.canonical = canonical;
+    // Default robots: private/auth/admin sayfaları için sonradan override edilecek
+    // Public sayfalar indexlenebilir, 404 ve private noindex olacak
+    const path = req.path;
+    const isPrivate =
+        path.startsWith("/admin") ||
+        path.startsWith("/profilim") ||
+        path === "/kayit-ol" ||
+        path === "/giris-yap" ||
+        path === "/sifremi-unuttum" ||
+        path.startsWith("/sifre-sifirla") ||
+        path === "/ilanlar/ilan-ekle" ||
+        path === "/forum/konu-ac";
+    if (isPrivate) {
+        res.locals.robots = "noindex, nofollow";
+    } else if (req.query.q !== undefined) {
+        // Arama sonuçları ince içerik → noindex
+        res.locals.robots = "noindex, follow";
+    }
     next();
 });
 
@@ -81,8 +109,9 @@ app.use(forum);
 app.use(admin);
 app.use(sitemapRouter);
 
-// 404
+// 404 — noindex
 app.use((req, res) => {
+    res.locals.robots = "noindex, nofollow";
     res.status(404).render("user/error");
 });
 
