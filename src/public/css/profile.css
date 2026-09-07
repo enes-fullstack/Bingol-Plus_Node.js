@@ -105,6 +105,104 @@ main { padding: 16px 0 64px; }
   color: var(--ink);
 }
 
+/* ---------- PROFILE NAV CARDS ---------- */
+.profile-nav-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.profile-nav-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  padding: 20px 18px 18px;
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.profile-nav-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(36, 38, 32, 0.12);
+  border-color: var(--lake);
+}
+
+.pnc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pnc-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper-raised);
+  border: 1px solid var(--stone-line);
+  color: var(--lake-deep);
+}
+
+.pnc-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.profile-nav-card h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 2px 0 0;
+  color: var(--ink);
+}
+
+.profile-nav-card p {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.pnc-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lake-deep);
+  margin-top: 4px;
+}
+
+html[data-theme="dark"] .profile-nav-card {
+  background: #1E2320;
+  border-color: var(--stone-line);
+}
+
+html[data-theme="dark"] .profile-nav-card:hover {
+  border-color: var(--lake);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+}
+
+html[data-theme="dark"] .pnc-icon {
+  background: #232824;
+  border-color: var(--stone-line);
+  color: var(--lake-deep);
+}
+
+html[data-theme="dark"] .profile-nav-card h3 { color: var(--ink); }
+html[data-theme="dark"] .profile-nav-card p { color: var(--ink-soft); }
+
+@media (max-width: 860px) {
+  .profile-nav-cards { grid-template-columns: 1fr; }
+}
+
 /* ---------- SECTION ---------- */
 .section { margin-top: 38px; }
 
@@ -380,6 +478,30 @@ main { padding: 16px 0 64px; }
 }
 
 .profile-posts .action-btn:hover { border-color: var(--lake); }
+
+.profile-posts .action-btn.delete-btn {
+  color: #c0392b;
+  border-color: #e5a0a0;
+  background: #fff;
+}
+
+.profile-posts .action-btn.delete-btn:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
+
+html[data-theme="dark"] .profile-posts .action-btn.delete-btn {
+  background: #232824;
+  color: #ff8a80;
+  border-color: #5a2e2e;
+}
+
+html[data-theme="dark"] .profile-posts .action-btn.delete-btn:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
 
 .profile-posts .action-btn[data-liked="true"] {
   background: rgba(27,111,118,0.12);

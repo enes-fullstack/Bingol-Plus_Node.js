@@ -192,6 +192,31 @@
           } else {
             btn.classList.toggle("saved", data.saved);
             showToast(data.saved ? "İlan kaydedildi" : "İlan kayıttan kaldırıldı");
+            // If we are on /profilim/kaydedilenler, remove the card when unsaved
+            if (!data.saved) {
+              var savedCountEl = document.getElementById("savedCount");
+              if (savedCountEl) {
+                var card = btn.closest(".job-card");
+                if (card && card.closest(".jobs-list")) {
+                  // Only remove if the button is inside the saved list (not other pages)
+                  var isSavedPage = window.location.pathname === "/profilim/kaydedilenler";
+                  if (isSavedPage) {
+                    card.remove();
+                    var match = savedCountEl.textContent.match(/\((\d+)\)/);
+                    if (match) {
+                      var newCount = parseInt(match[1], 10) - 1;
+                      savedCountEl.textContent = "(" + newCount + ")";
+                      if (newCount === 0) {
+                        var jobsList = document.querySelector(".jobs-list");
+                        if (jobsList && jobsList.children.length === 0) {
+                          jobsList.outerHTML = '<div class="empty">Henüz kaydedilmiş ilan bulunmuyor. <a href="/ilanlar">İlanlara göz at</a>.</div>';
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         } else {
           showToast(data.error || "Bir hata oluştu");

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <%- include('../partials/head', { title: 'Kaydedilen İlanlar - Bingöl Plus', description: 'Bingöl Plus kaydedilen ilanlar sayfası.' }) %>
+  <title>Kaydedilen İlanlar - Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/profile.css">
+</head>
+
+<body data-user-logged-in="<%= typeof userId !== 'undefined' && userId ? 'true' : 'false' %>">
+
+  <%- include('../partials/navbar', { currentPage: 'profilim' }) %>
+
+  <div class="wrap">
+    <%- include('../partials/flash') %>
+    <div class="crumb">
+      <a href="/">Ana Sayfa</a>
+      <span>/</span>
+      <a href="/profilim">Profilim</a>
+      <span>/</span>
+      <span class="mono">Kaydedilenler</span>
+    </div>
+    <a href="/profilim" class="top-link">← Profilime Dön</a>
+
+    <main>
+      <div class="section">
+        <div class="section-head">
+          <h2>Kaydedilen İlanlar</h2>
+          <span class="count" id="savedCount">(<%= savedJobs.length %>)</span>
+        </div>
+
+        <% if (savedJobs.length > 0) { %>
+        <div class="jobs-list">
+          <% savedJobs.forEach(sj => { %>
+          <div class="job-card">
+            <span class="pin"></span>
+            <div class="job-title"><%= sj.Job.title %></div>
+            <div class="job-meta">
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" />
+                </svg><%= sj.Job.company %></span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg><%= sj.Job.location %></span>
+              <% if (sj.Job.salary) { %><span class="salary"><%= sj.Job.salary %></span><% } %>
+            </div>
+            <div class="job-desc"><%= sj.Job.description %></div>
+            <div class="job-footer">
+              <span class="mono"><%= new Date(sj.createdAt).toLocaleDateString("tr-TR") %></span>
+              <a href="/ilanlar/<%= sj.jobId %>/<%= slugify(sj.Job.title) %>" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">İlanı İncele</a>
+            </div>
+            <button class="save-btn" data-job-id="<%= sj.jobId %>" aria-label="Kaydı kaldır">
+              <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M6 3h12v18l-6-4-6 4V3z" />
+              </svg>
+            </button>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="empty">Henüz kaydedilmiş ilan bulunmuyor. <a href="/ilanlar">İlanlara göz at</a>.</div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

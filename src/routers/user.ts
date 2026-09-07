@@ -19,6 +19,10 @@ router.get("/gizlilik-politikasi", generalLimiter, userController.privacy_get);
 router.get("/kullanim-sartlari", generalLimiter, userController.terms_get);
 router.get("/cerez-politikasi", generalLimiter, userController.cookies_get);
 router.get("/profilim", generalLimiter, requireAuth, userController.profile_get);
+router.get("/profilim/postlarim", generalLimiter, requireAuth, userController.profilePosts_get);
+router.get("/profilim/ilanlarim", generalLimiter, requireAuth, userController.profileJobs_get);
+router.get("/profilim/kaydedilenler", generalLimiter, requireAuth, userController.profileSaved_get);
 router.post("/profilim/resim-yukle", requireAuth, profileUploadLimiter, userController.profileImageUpload_post);
+router.post("/profilim/post-sil/:id", requireAuth, generalLimiter, userController.postDelete_post);
 
 export default router;

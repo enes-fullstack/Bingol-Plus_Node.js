@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Forum Yönetimi - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — forum post ve yanıt yönetimi.' }) %>
+  <title>Forum Yönetimi - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+  .forum-manage-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .forum-manage-table th { background: var(--paper-raised); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-soft); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--stone-line); }
+  .forum-manage-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--stone-line); vertical-align: middle; }
+  .forum-manage-table tr:last-child td { border-bottom: none; }
+  .forum-title { font-weight: 600; color: var(--ink); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+  .forum-meta { font-size: 11px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+  .badge-cat { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; background: rgba(27,111,118,0.09); border: 1px solid rgba(27,111,118,0.25); color: var(--lake-deep); font-family: 'JetBrains Mono', monospace; }
+  .reply-content { max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+  .btn-delete { padding: 4px 12px; border: 1px solid #e74c3c; border-radius: 4px; background: #fff; color: #e74c3c; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; }
+  .btn-delete:hover { background: #e74c3c; color: #fff; }
+  html[data-theme="dark"] .forum-manage-table { background: #1E2320; }
+  html[data-theme="dark"] .forum-manage-table th { background: #232824; color: var(--ink-soft); border-bottom-color: var(--stone-line); }
+  html[data-theme="dark"] .forum-manage-table td { border-bottom-color: var(--stone-line); color: var(--ink); }
+  html[data-theme="dark"] .forum-title { color: var(--ink); }
+  html[data-theme="dark"] .reply-content { color: var(--ink); }
+  html[data-theme="dark"] .badge-cat { background: rgba(58,173,90,0.12); border-color: rgba(58,173,90,0.22); color: var(--lake-deep); }
+  html[data-theme="dark"] .btn-delete { background: #1E2320; border-color: #5a2e2e; color: #ff8a80; }
+  html[data-theme="dark"] .btn-delete:hover { background: #c0392b; border-color: #c0392b; color: #fff; }
+  html[data-theme="dark"] .table-wrap { background: #1E2320; border-color: var(--stone-line); }
+  html[data-theme="dark"] .empty-manage { background: #1A1E1B; border-color: var(--stone-line); color: var(--ink-soft); }
+  html[data-theme="dark"] .section-title { color: var(--ink); }
+  html[data-theme="dark"] .section-count { color: var(--ink-soft); }
+  .section-title { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+  .section-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; flex-wrap: wrap; }
+  .section-count { font-size: 13px; color: var(--ink-soft); font-family: 'JetBrains Mono', monospace; }
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; font-size: 13px; }
+  .pagination a { color: var(--lake-deep); font-weight: 500; }
+  .pagination a:hover { text-decoration: underline; }
+  .pagination .disabled { color: var(--ink-soft); pointer-events: none; }
+  .search-bar { display: flex; gap: 8px; margin-bottom: 20px; }
+  .search-bar input { flex: 1; padding: 8px 12px; border: 1px solid var(--stone); border-radius: 6px; font-family: 'Work Sans', sans-serif; font-size: 13px; background: #fff; color: var(--ink); }
+  .search-bar input:focus { outline: 2px solid var(--lake); outline-offset: -1px; }
+  .search-bar button { padding: 8px 16px; background: var(--lake); color: #fff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .search-bar button:hover { background: var(--lake-deep); }
+  .search-bar a { display:inline-flex; align-items:center; padding:8px 12px; font-size:13px; color:var(--ink-soft); text-decoration:none; }
+  .search-bar a:hover { color: var(--ink); text-decoration: underline; }
+  html[data-theme="dark"] .search-bar input { background: #181C19; border-color: var(--stone); color: var(--ink); }
+  html[data-theme="dark"] .search-bar input:focus { outline-color: var(--lake); }
+  .manage-section { margin-bottom: 32px; }
+  .empty-manage { text-align:center; padding: 24px; color: var(--ink-soft); background: var(--paper-raised); border: 1px dashed var(--stone); border-radius: var(--radius); font-size: 13px; }
+  @media (max-width: 640px) {
+    .forum-manage-table th, .forum-manage-table td { padding: 8px 10px; font-size: 12px; }
+    .forum-title { max-width: 140px; }
+    .reply-content { max-width: 140px; }
+    .hide-mobile { display: none; }
+  }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin" class="top-link">← Admin Paneline Dön</a>
+    <div class="admin-head">
+      <h1>Forum Yönetimi</h1>
+      <p>Post ve yanıtları görüntüleyin ve yönetin</p>
+    </div>
+
+    <form class="search-bar" method="get" action="/admin/forum">
+      <input type="text" name="q" placeholder="Post başlığı, içeriği veya yanıt ara..." value="<%= typeof search !== 'undefined' ? search : '' %>">
+      <button type="submit">Ara</button>
+      <% if (typeof search !== 'undefined' && search) { %>
+        <a href="/admin/forum">Temizle</a>
+      <% } %>
+    </form>
+
+    <!-- POSTLAR -->
+    <div class="manage-section">
+      <div class="section-head-row">
+        <h2 class="section-title">Postlar</h2>
+        <span class="section-count">Toplam <%= postCount %> post</span>
+      </div>
+
+      <% if (posts && posts.length > 0) { %>
+        <div class="table-wrap">
+        <table class="forum-manage-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">ID</th>
+              <th>Başlık</th>
+              <th>Kategori</th>
+              <th class="hide-mobile">Yazar</th>
+              <th class="hide-mobile">Tarih</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% posts.forEach(function(p) { %>
+              <tr>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);"><%= p.id %></td>
+                <td>
+                  <a href="/forum/konu/<%= p.id %>" class="forum-title" title="<%= p.title %>"><%= p.title %></a>
+                  <div class="forum-meta hide-mobile"><%= p.content ? p.content.substring(0,60) + (p.content.length>60 ? '...' : '') : '' %></div>
+                </td>
+                <td><span class="badge-cat"><%= p.PostCategory ? p.PostCategory.name : '—' %></span></td>
+                <td class="hide-mobile"><%= p.User ? p.User.username : '—' %></td>
+                <td class="hide-mobile" style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;"><%= new Date(p.createdAt).toLocaleDateString("tr-TR") %></td>
+                <td style="text-align:right;white-space:nowrap;">
+                  <form method="post" action="/admin/konu-sil/<%= p.id %>" style="display:inline;" onsubmit="return confirm('Bu konuyu silmek istediğinize emin misiniz?');">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn-delete">Sil</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        </div>
+
+        <% if (postTotalPages > 1) { %>
+          <div class="pagination">
+            <% if (postPage > 1) { %>
+              <a href="/admin/forum?postPage=<%= postPage-1 %>&replyPage=<%= replyPage %><%= (typeof search !== 'undefined' && search) ? '&q='+encodeURIComponent(search) : '' %>">← Önceki</a>
+            <% } else { %>
+              <span class="disabled">← Önceki</span>
+            <% } %>
+            <span>Sayfa <%= postPage %> / <%= postTotalPages %></span>
+            <% if (postPage < postTotalPages) { %>
+              <a href="/admin/forum?postPage=<%= postPage+1 %>&replyPage=<%= replyPage %><%= (typeof search !== 'undefined' && search) ? '&q='+encodeURIComponent(search) : '' %>">Sonraki →</a>
+            <% } else { %>
+              <span class="disabled">Sonraki →</span>
+            <% } %>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <div class="empty-manage"><%= (typeof search !== 'undefined' && search) ? 'Aramanızla eşleşen post bulunamadı.' : 'Henüz hiç post bulunmuyor.' %></div>
+      <% } %>
+    </div>
+
+    <!-- YANITLAR -->
+    <div class="manage-section">
+      <div class="section-head-row">
+        <h2 class="section-title">Yanıtlar</h2>
+        <span class="section-count">Toplam <%= replyCount %> yanıt</span>
+      </div>
+
+      <% if (replies && replies.length > 0) { %>
+        <div class="table-wrap">
+        <table class="forum-manage-table">
+          <thead>
+            <tr>
+              <th style="width:40px;">ID</th>
+              <th>İçerik</th>
+              <th class="hide-mobile">Yazar</th>
+              <th>Post</th>
+              <th class="hide-mobile">Tarih</th>
+              <th style="text-align:right;">İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% replies.forEach(function(r) { %>
+              <tr>
+                <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);"><%= r.id %></td>
+                <td><span class="reply-content" title="<%= r.content %>"><%= r.content %></span></td>
+                <td class="hide-mobile"><%= r.User ? r.User.username : '—' %></td>
+                <td>
+                  <% if (r.Post) { %>
+                    <a href="/forum/konu/<%= r.Post.id %>" style="color:var(--lake-deep);font-weight:500;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;" title="<%= r.Post.title %>"><%= r.Post.title %></a>
+                  <% } else { %>
+                    <span style="color:var(--ink-soft);font-size:12px;">#<%= r.postId %></span>
+                  <% } %>
+                </td>
+                <td class="hide-mobile" style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;"><%= new Date(r.createdAt).toLocaleDateString("tr-TR") %></td>
+                <td style="text-align:right;white-space:nowrap;">
+                  <form method="post" action="/admin/yanit-sil/<%= r.id %>" style="display:inline;" onsubmit="return confirm('Bu yanıtı silmek istediğinize emin misiniz?');">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn-delete">Sil</button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        </div>
+
+        <% if (replyTotalPages > 1) { %>
+          <div class="pagination">
+            <% if (replyPage > 1) { %>
+              <a href="/admin/forum?postPage=<%= postPage %>&replyPage=<%= replyPage-1 %><%= (typeof search !== 'undefined' && search) ? '&q='+encodeURIComponent(search) : '' %>">← Önceki</a>
+            <% } else { %>
+              <span class="disabled">← Önceki</span>
+            <% } %>
+            <span>Sayfa <%= replyPage %> / <%= replyTotalPages %></span>
+            <% if (replyPage < replyTotalPages) { %>
+              <a href="/admin/forum?postPage=<%= postPage %>&replyPage=<%= replyPage+1 %><%= (typeof search !== 'undefined' && search) ? '&q='+encodeURIComponent(search) : '' %>">Sonraki →</a>
+            <% } else { %>
+              <span class="disabled">Sonraki →</span>
+            <% } %>
+          </div>
+        <% } %>
+
+      <% } else { %>
+        <div class="empty-manage"><%= (typeof search !== 'undefined' && search) ? 'Aramanızla eşleşen yanıt bulunamadı.' : 'Henüz hiç yanıt bulunmuyor.' %></div>
+      <% } %>
+    </div>
+
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

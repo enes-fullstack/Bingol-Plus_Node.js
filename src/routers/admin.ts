@@ -22,6 +22,8 @@ router.get("/admin/kullanicilar", generalLimiter, requireAdmin, adminController.
 router.post("/admin/kullanici-sil/:id", requireAdmin, adminLimiter, adminController.userDeletePost);
 router.post("/admin/kullanici-ban/:id", requireAdmin, adminLimiter, adminController.userBanPost);
 router.post("/admin/konu-sil/:postId", requireAdmin, adminLimiter, adminController.topicDeletePost);
+router.get("/admin/forum", generalLimiter, requireAdmin, adminController.forumManageGet);
+router.post("/admin/yanit-sil/:id", requireAdmin, adminLimiter, adminController.replyDeletePost);
 router.get("/admin/kategoriler", generalLimiter, requireAdmin, adminController.categoriesGet);
 router.post("/admin/kategori-ekle", requireAdmin, adminLimiter, adminController.categoryCreatePost);
 router.post("/admin/kategori-sil/:id", requireAdmin, adminLimiter, adminController.categoryDeletePost);

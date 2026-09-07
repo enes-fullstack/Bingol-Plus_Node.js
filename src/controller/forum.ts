@@ -317,8 +317,7 @@ export const createPost = async (req: Request, res: Response): Promise<void> => 
         });
 
         req.session.flash = { type: "success", message: "Konunuz başarıyla oluşturuldu." };
-        const redirect = getSafeForumRedirect(req.query.redirect);
-        res.redirect(redirect);
+        res.redirect("/forum/akis");
     } catch (err) {
         console.log("Error Code:", 4001);
         error(`Post oluşturulurken hata (kullanıcı ID: ${req.session.userId}): ${normalizeError(err)}`);

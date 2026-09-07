@@ -103,7 +103,7 @@ describe("POST /forum/konu-ac", () => {
         expectRedirect(res, "/giris-yap");
     });
 
-    it("giriş yapmışsa 302 ile /forum yönlendirir", async () => {
+    it("giriş yapmışsa 302 ile /forum/akis yönlendirir", async () => {
         const agent = request.agent(app);
         const csrf1 = await getCsrfToken(agent, "/forum/akis");
         await agent.post("/giris-yap").type("form").send({ _csrf: csrf1, username: "testuser", password: "test1234" });
@@ -113,7 +113,7 @@ describe("POST /forum/konu-ac", () => {
         const cat = await PostCategory.findOne({ where: { name: "Genel" } });
 
         const res = await agent.post("/forum/konu-ac").type("form").send({ _csrf: csrf2, title: "Test Konu Başlığı", content: "Bu bir test konusu içeriğidir. Yeterli uzunlukta olmalıdır.", categoryId: cat!.id });
-        expectRedirect(res, "/forum");
+        expectRedirect(res, "/forum/akis");
     });
 
     it("geçersiz veri ile aynı sayfaya yönlendirir", async () => {

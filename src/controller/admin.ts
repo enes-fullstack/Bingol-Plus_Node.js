@@ -473,7 +473,12 @@ export const topicDeletePost = async (req: Request, res: Response): Promise<void
     const postId = Number(req.params.postId);
 
     if (!postId || isNaN(postId)) {
-        res.redirect("/forum");
+        const referer = (req.headers.referer || "") as string;
+        if (referer.includes("/admin/forum")) {
+            res.redirect("/admin/forum");
+        } else {
+            res.redirect("/forum");
+        }
         return;
     }
 
@@ -483,12 +488,112 @@ export const topicDeletePost = async (req: Request, res: Response): Promise<void
         await Post.destroy({ where: { id: postId } });
 
         req.session.flash = { type: "success", message: "Konu başarıyla silindi." };
-        res.redirect("/forum");
+        const referer = (req.headers.referer || "") as string;
+        if (referer.includes("/admin/forum")) {
+            res.redirect("/admin/forum");
+        } else {
+            res.redirect("/forum");
+        }
     } catch (err) {
         console.log("Error Code:", 4011);
         error(`Konu silinirken hata (post ID: ${postId}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Konu silinirken bir hata oluştu." };
-        res.redirect("/forum");
+        const referer = (req.headers.referer || "") as string;
+        if (referer.includes("/admin/forum")) {
+            res.redirect("/admin/forum");
+        } else {
+            res.redirect("/forum");
+        }
+    }
+};
+
+export const forumManageGet = async (req: Request, res: Response): Promise<void> => {
+    const postPage = Math.min(100, Math.max(1, Number(req.query.postPage) || 1));
+    const replyPage = Math.min(100, Math.max(1, Number(req.query.replyPage) || 1));
+    const limit = 20;
+    const postOffset = (postPage - 1) * limit;
+    const replyOffset = (replyPage - 1) * limit;
+
+    const search = typeof req.query.q === "string" ? req.query.q.trim() : "";
+    const escaped = search.replace(/[\\%_]/g, "\\$&");
+
+    const postWhere: Record<string, unknown> = {};
+    const replyWhere: Record<string, unknown> = {};
+    if (search) {
+        (postWhere as any)[Op.or] = [
+            { title: { [Op.like]: `%${escaped}%` } },
+            { content: { [Op.like]: `%${escaped}%` } }
+        ];
+        replyWhere.content = { [Op.like]: `%${escaped}%` };
+    }
+
+    const [postCount, replyCount] = await Promise.all([Post.count({ where: postWhere }), PostReply.count({ where: replyWhere })]);
+
+    const posts = await Post.findAll({
+        where: postWhere,
+        include: [
+            { model: User, attributes: ["id", "username"] },
+            { model: PostCategory, attributes: ["name"] }
+        ],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset: postOffset
+    });
+
+    const replies = await PostReply.findAll({
+        where: replyWhere,
+        include: [
+            { model: User, attributes: ["id", "username"] },
+            { model: Post, attributes: ["id", "title"] }
+        ],
+        order: [["createdAt", "DESC"]],
+        limit,
+        offset: replyOffset
+    });
+
+    let username: string | null = null;
+    if (req.session.userId) {
+        const user = await User.findByPk(req.session.userId, { attributes: ["username"] });
+        if (user) username = user.username;
+    }
+
+    res.status(200).render("admin/forum", {
+        posts,
+        replies,
+        postPage,
+        replyPage,
+        postTotalPages: Math.ceil(postCount / limit),
+        replyTotalPages: Math.ceil(replyCount / limit),
+        postCount,
+        replyCount,
+        search,
+        username,
+        userId: req.session.userId || null
+    });
+};
+
+export const replyDeletePost = async (req: Request, res: Response): Promise<void> => {
+    const replyId = Number((req.params as Record<string, string>).id || (req.params as Record<string, string>).replyId);
+    if (!replyId || isNaN(replyId)) {
+        res.redirect("/admin/forum");
+        return;
+    }
+
+    try {
+        const reply = await PostReply.findByPk(replyId);
+        if (!reply) {
+            req.session.flash = { type: "error", message: "Yanıt bulunamadı." };
+            res.redirect("/admin/forum");
+            return;
+        }
+        await reply.destroy();
+        req.session.flash = { type: "success", message: "Yanıt başarıyla silindi." };
+        res.redirect("/admin/forum");
+    } catch (err) {
+        console.log("Error Code:", 4012);
+        error(`Yanıt silinirken hata (reply ID: ${replyId}): ${normalizeError(err)}`);
+        req.session.flash = { type: "error", message: "Yanıt silinirken bir hata oluştu." };
+        res.redirect("/admin/forum");
     }
 };
 

@@ -381,19 +381,21 @@ export const jobDelete_post = async (req: Request, res: Response): Promise<void>
     }
 
     const id = Number(req.params.id);
-    if (!id || isNaN(id)) { res.redirect("/profilim"); return; }
+    const referer = (req.headers.referer || "") as string;
+    const redirectTarget = referer.includes("/profilim/ilanlarim") ? "/profilim/ilanlarim" : "/profilim";
+    if (!id || isNaN(id)) { res.redirect(redirectTarget); return; }
 
     try {
         const job = await Job.findByPk(id, { attributes: ["id", "title", "userId"] });
         if (!job) {
             req.session.flash = { type: "error", message: "İlan bulunamadı." };
-            res.redirect("/profilim");
+            res.redirect(redirectTarget);
             return;
         }
 
         if (job.userId !== req.session.userId) {
             req.session.flash = { type: "error", message: "Bu ilanı silme yetkiniz yok." };
-            res.redirect("/profilim");
+            res.redirect(redirectTarget);
             return;
         }
 
@@ -401,12 +403,54 @@ export const jobDelete_post = async (req: Request, res: Response): Promise<void>
         await job.destroy();
 
         req.session.flash = { type: "success", message: `"${job.title}" ilanınız silindi.` };
-        res.redirect("/profilim");
+        res.redirect(redirectTarget);
     } catch (err) {
         console.log("Error Code:", 5006);
         error(`İlan silinirken hata (kullanıcı ID: ${req.session.userId}, ilan ID: ${id}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "İlan silinirken bir hata oluştu." };
-        res.redirect("/profilim");
+        res.redirect(redirectTarget);
+    }
+};
+
+export const postDelete_post = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const postId = Number(req.params.id);
+    const referer = (req.headers.referer || "") as string;
+    const redirectTarget = referer.includes("/profilim/postlarim") ? "/profilim/postlarim" : "/profilim";
+    if (!postId || isNaN(postId)) {
+        res.redirect(redirectTarget);
+        return;
+    }
+
+    try {
+        const post = await Post.findByPk(postId, { attributes: ["id", "title", "userId"] });
+        if (!post) {
+            req.session.flash = { type: "error", message: "Gönderi bulunamadı." };
+            res.redirect(redirectTarget);
+            return;
+        }
+
+        if (post.userId !== req.session.userId) {
+            req.session.flash = { type: "error", message: "Bu gönderiyi silme yetkiniz yok." };
+            res.redirect(redirectTarget);
+            return;
+        }
+
+        await PostLike.destroy({ where: { postId } });
+        await PostReply.destroy({ where: { postId } });
+        await post.destroy();
+
+        req.session.flash = { type: "success", message: "Gönderiniz silindi." };
+        res.redirect(redirectTarget);
+    } catch (err) {
+        console.log("Error Code:", 4011);
+        error(`Gönderi silinirken hata (kullanıcı ID: ${req.session.userId}, post ID: ${postId}): ${normalizeError(err)}`);
+        req.session.flash = { type: "error", message: "Gönderi silinirken bir hata oluştu." };
+        res.redirect(redirectTarget);
     }
 };
 
@@ -445,20 +489,38 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
         return;
     }
 
-    const savedJobs = await SavedJob.findAll({
-        where: { userId: req.session.userId },
-        include: [{ model: Job, attributes: ["id", "title", "description", "company", "location", "salary", "phone", "createdAt"] }],
-        order: [["createdAt", "DESC"]]
-    });
+    const [postCount, savedCount, myJobsCount] = await Promise.all([
+        Post.count({ where: { userId: req.session.userId } }),
+        SavedJob.count({ where: { userId: req.session.userId } }),
+        Job.count({ where: { userId: req.session.userId } })
+    ]);
 
-    const myJobs = await Job.findAll({
-        where: { userId: req.session.userId },
-        order: [["createdAt", "DESC"]]
+    res.status(200).render("user/profile", {
+        user,
+        postCount,
+        savedCount,
+        myJobsCount,
+        userId: req.session.userId,
+        username: user.username
     });
+};
+
+export const profilePosts_get = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const user = await User.findByPk(req.session.userId, {
+        attributes: ["email", "username", "createdAt", "profileImage", "role"]
+    });
+    if (!user) {
+        res.redirect("/giris-yap");
+        return;
+    }
 
     const postCount = await Post.count({ where: { userId: req.session.userId } });
 
-    // Kullanıcının paylaştığı postlar + beğeni/yanıt verileri (profil için)
     const myPosts = await Post.findAll({
         where: { userId: req.session.userId },
         include: [
@@ -501,10 +563,8 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
         }
     }
 
-    res.status(200).render("user/profile", {
+    res.status(200).render("user/profile-posts", {
         user,
-        savedJobs,
-        myJobs,
         postCount,
         userId: req.session.userId,
         username: user.username,
@@ -514,4 +574,59 @@ export const profile_get = async (req: Request, res: Response): Promise<void> =>
         myPostAvatarMap,
         myPostUserLikedMap
     });
-};;
+};
+
+export const profileJobs_get = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const user = await User.findByPk(req.session.userId, {
+        attributes: ["email", "username", "createdAt", "profileImage", "role"]
+    });
+    if (!user) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const myJobs = await Job.findAll({
+        where: { userId: req.session.userId },
+        order: [["createdAt", "DESC"]]
+    });
+
+    res.status(200).render("user/profile-jobs", {
+        user,
+        myJobs,
+        userId: req.session.userId,
+        username: user.username
+    });
+};
+
+export const profileSaved_get = async (req: Request, res: Response): Promise<void> => {
+    if (!req.session.userId) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const user = await User.findByPk(req.session.userId, {
+        attributes: ["email", "username", "createdAt", "profileImage", "role"]
+    });
+    if (!user) {
+        res.redirect("/giris-yap");
+        return;
+    }
+
+    const savedJobs = await SavedJob.findAll({
+        where: { userId: req.session.userId },
+        include: [{ model: Job, attributes: ["id", "title", "description", "company", "location", "salary", "phone", "createdAt"] }],
+        order: [["createdAt", "DESC"]]
+    });
+
+    res.status(200).render("user/profile-saved", {
+        user,
+        savedJobs,
+        userId: req.session.userId,
+        username: user.username
+    });
+};

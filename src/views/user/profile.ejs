@@ -54,163 +54,42 @@
         </div>
       </div>
 
-      <div class="section" id="myPostsSection">
-        <div class="section-head">
-          <h2>Paylaştığım Gönderiler</h2>
-          <span class="count">(<%= myPosts ? myPosts.length : 0 %>)</span>
-        </div>
-
-        <% if (myPosts && myPosts.length > 0) { %>
-        <div class="profile-posts">
-          <% myPosts.forEach(function(post) { %>
-          <article class="post-card">
-            <% if (post.User && post.User.role === 'admin') { %>
-              <span class="creator-badge">Kurucu Tarafından</span>
-            <% } else { %>
-              <span class="pin"></span>
-            <% } %>
-            <h3 class="post-title"><a href="/forum/konu/<%= post.id %>/<%= slugify(post.title) %>" style="color:inherit;"><%= post.title %></a></h3>
-            <div class="post-meta">
-              <span class="cat-tag"><%= post.PostCategory.name %></span>
-              <span>·</span>
-              <span class="mono"><%= new Date(post.createdAt).toLocaleDateString("tr-TR") %></span>
-            </div>
-            <div class="post-content"><%= post.content %></div>
-            <div class="actions" style="margin-top:16px;">
-              <button class="like-btn action-btn" data-post-id="<%= post.id %>">
-                <svg class="like-icon" width="18" height="18" viewBox="0 0 24 24" fill="<%= (typeof myPostUserLikedMap !== 'undefined' && myPostUserLikedMap[post.id]) ? 'var(--lake-deep)' : 'none' %>" stroke="var(--lake-deep)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-                <span class="like-count"><%= post.likes || 0 %></span>
-              </button>
-              <button class="reply-btn action-btn" data-post-id="<%= post.id %>">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>Yanıtlar<%= (typeof replyCounts !== 'undefined' && replyCounts[post.id]) ? ' (' + replyCounts[post.id] + ')' : '' %></span>
-              </button>
-              <a href="/forum/konu/<%= post.id %>/<%= slugify(post.title) %>" class="action-btn" style="margin-left:auto;text-decoration:none;font-size:13px;">Görüntüle</a>
-            </div>
-            <div class="reply-section" style="display:none;">
-              <% if (userId) { %>
-              <div class="reply-form">
-                <textarea class="reply-textarea" rows="3" placeholder="Yanıtınızı yazın..."></textarea>
-                <button class="btn btn-solid reply-submit-btn" data-post-id="<%= post.id %>">Gönder</button>
-              </div>
-              <% } else { %>
-              <div class="guest-note"><a href="/giris-yap">Giriş yap</a> veya <a href="/kayit-ol">kaydol</a> ve yanıt yaz.</div>
-              <% } %>
-              <div class="replies-list">
-                <% var pr = (typeof repliesByPost !== 'undefined' && repliesByPost[post.id]) ? repliesByPost[post.id] : []; %>
-                <% if (pr && pr.length > 0) { %>
-                  <% pr.forEach(function(reply) { %>
-                    <div class="reply-item">
-                      <% var ra = (typeof myPostAvatarMap !== 'undefined') ? myPostAvatarMap[reply.User.id] : null; %>
-                      <% if (ra) { %>
-                        <img src="<%= ra %>" alt="" class="reply-avatar-img" loading="lazy" data-avatar="<%= reply.User.profileImage || '' %>">
-                      <% } else { %>
-                        <div class="reply-avatar <%= reply.User.role === 'admin' ? 'admin-avatar' : '' %>"><%= reply.User.username.charAt(0).toUpperCase() %></div>
-                      <% } %>
-                      <div class="reply-body">
-                        <div class="reply-head"><strong class="<%= reply.User.role === 'admin' ? 'admin-username' : '' %>"><%= reply.User.username %></strong><% if (reply.User.role === 'admin') { %><span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><% } %> &middot; <%= new Date(reply.createdAt).toLocaleDateString("tr-TR") %></div>
-                        <div class="reply-text"><%= reply.content %></div>
-                      </div>
-                    </div>
-                  <% }) %>
-                <% } else { %>
-                  <p class="no-replies-msg">Henüz yanıt yok.</p>
-                <% } %>
-              </div>
-              <% if (typeof replyCounts !== 'undefined' && replyCounts[post.id] > 3) { %>
-                <button class="load-more-btn" data-post-id="<%= post.id %>" data-offset="3">Daha fazla yanıt göster (<%= replyCounts[post.id] - 3 %>)</button>
-              <% } %>
-            </div>
-          </article>
-          <% }) %>
-        </div>
-        <% } else { %>
-        <div class="empty">Henüz gönderi paylaşmadınız. <a href="/forum/konu-ac">Konu aç</a>.</div>
-        <% } %>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <h2>Kaydedilen İlanlar</h2>
-          <span class="count" id="savedCount">(<%= savedJobs.length %>)</span>
-        </div>
-
-        <% if (savedJobs.length > 0) { %>
-        <div class="jobs-list">
-          <% savedJobs.forEach(sj => { %>
-          <div class="job-card">
-            <span class="pin"></span>
-            <div class="job-title"><%= sj.Job.title %></div>
-            <div class="job-meta">
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" />
-                </svg><%= sj.Job.company %></span>
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg><%= sj.Job.location %></span>
-              <% if (sj.Job.salary) { %><span class="salary"><%= sj.Job.salary %></span><% } %>
-            </div>
-            <div class="job-desc"><%= sj.Job.description %></div>
-            <div class="job-footer">
-              <span class="mono"><%= new Date(sj.createdAt).toLocaleDateString("tr-TR") %></span>
-              <a href="/ilanlar/<%= sj.jobId %>/<%= slugify(sj.Job.title) %>" class="btn btn-solid" style="padding:5px 12px; font-size:12px;">İlanı İncele</a>
-            </div>
-            <button class="save-btn" data-job-id="<%= sj.jobId %>" aria-label="Kaydı kaldır">
-              <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M6 3h12v18l-6-4-6 4V3z" />
-              </svg>
-            </button>
+      <div class="profile-nav-cards">
+        <a href="/profilim/postlarim" class="profile-nav-card">
+          <div class="pnc-top">
+            <span class="pnc-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </span>
+            <span class="pnc-count mono"><%= postCount %></span>
           </div>
-          <% }) %>
-        </div>
-        <% } else { %>
-        <div class="empty">Henüz kaydedilmiş ilan bulunmuyor. <a href="/ilanlar">İlanlara göz at</a>.</div>
-        <% } %>
-      </div>
+          <h3>Postlarım</h3>
+          <p>Paylaştığınız gönderileri görüntüleyin ve silin</p>
+          <span class="pnc-link">Görüntüle →</span>
+        </a>
 
-      <div class="section">
-        <div class="section-head">
-          <h2>İlanlarım</h2>
-          <span class="count">(<%= myJobs.length %>)</span>
-        </div>
-
-        <% if (myJobs.length > 0) { %>
-        <div class="jobs-list" id="myJobs">
-          <% myJobs.forEach(job => { %>
-          <div class="job-card">
-            <span class="pin"></span>
-            <div class="job-title"><a href="/ilanlar/<%= job.id %>/<%= slugify(job.title) %>" style="color:inherit;"><%= job.title %></a></div>
-            <div class="job-meta">
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1" />
-                </svg><%= job.company %></span>
-              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg><%= job.location %></span>
-              <% if (job.salary) { %><span class="salary"><%= job.salary %></span><% } %>
-            </div>
-            <div class="job-desc"><%= job.description %></div>
-            <div class="job-footer">
-              <span class="mono"><%= new Date(job.createdAt).toLocaleDateString("tr-TR") %></span>
-              <div style="display:flex;gap:8px;margin-left:auto;">
-                <form method="POST" action="/ilanlar/sil/<%= job.id %>" data-title="<%= job.title %>" style="display:inline;">
-                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                  <button type="submit" class="btn btn-ghost btn-sm job-delete-form" style="color:var(--clay);">Sil</button>
-                </form>
-              </div>
-            </div>
+        <a href="/profilim/ilanlarim" class="profile-nav-card">
+          <div class="pnc-top">
+            <span class="pnc-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M6 11h.01M10 11h.01M14 11h.01"></path></svg>
+            </span>
+            <span class="pnc-count mono"><%= myJobsCount %></span>
           </div>
-          <% }) %>
-        </div>
-        <% } else { %>
-        <div class="empty">Henüz yayınladığınız ilan bulunmuyor. <a href="/ilanlar/ilan-ekle">İlan ekleyin</a>.</div>
-        <% } %>
+          <h3>İlanlarım</h3>
+          <p>Oluşturduğunuz iş ilanlarını yönetin</p>
+          <span class="pnc-link">Görüntüle →</span>
+        </a>
+
+        <a href="/profilim/kaydedilenler" class="profile-nav-card">
+          <div class="pnc-top">
+            <span class="pnc-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            </span>
+            <span class="pnc-count mono"><%= savedCount %></span>
+          </div>
+          <h3>Kaydedilenlerim</h3>
+          <p>Kaydettiğiniz ilanları görüntüleyin</p>
+          <span class="pnc-link">Görüntüle →</span>
+        </a>
       </div>
 
     </main>
