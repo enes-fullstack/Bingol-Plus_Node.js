@@ -379,7 +379,7 @@ html[data-theme="dark"] .profile-nav-card p { color: var(--ink-soft); }
   background: #fff;
   border: 1px solid var(--stone-line);
   border-radius: var(--radius);
-  padding: 24px 22px 20px;
+  padding: 24px 22px 56px;
   box-shadow: var(--shadow);
 }
 
@@ -460,6 +460,7 @@ html[data-theme="dark"] .profile-nav-card p { color: var(--ink-soft); }
   gap: 10px;
   margin-top: 16px;
   flex-wrap: wrap;
+  padding-right: 52px;
 }
 
 .profile-posts .action-btn {
@@ -687,7 +688,7 @@ html[data-theme="dark"] .save-post-btn.saved:hover {
 
   .job-card { padding: 18px 18px 16px; }
 
-  .profile-posts .post-card { padding: 18px 16px 16px; }
+  .profile-posts .post-card { padding: 18px 16px 52px; }
   .profile-posts .post-title { font-size: 17px; }
 }
 
