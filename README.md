@@ -17,7 +17,7 @@ Canlı: `https://bingolplus.com` — `SITE_URL` env ile canonical URL üretilir 
 | Dosya | multer (memory) → Cloudinary · file-type (magic bytes) |
 | Mail | nodemailer (Gmail App Password) |
 | Log | winston + custom SequelizeTransport (console + DB) |
-| Frontend | Vanilla JS (`src/public/js/app.js` 1216 satır, IIFE) · CSS (sayfa bazlı) |
+| Frontend | Vanilla JS (`src/public/js/app.js` 1743 satır, IIFE) · CSS (sayfa bazlı 10 dosya) |
 | Test | Vitest 4 + Supertest · workspace `unit` / `integration` |
 | Infra | Docker multi-stage · Nginx (prod: gzip, HSTS, 1y immutable, 80→443) |
 
@@ -43,28 +43,28 @@ Canlı: `https://bingolplus.com` — `SITE_URL` env ile canonical URL üretilir 
 | `src/server.ts` | `sequelize.authenticate()` + `sessionStore.sync()` + `defineRelationships()` + `app.listen` |
 | `src/config/config.ts` | Typed `Config` (database/session/email/cloudinary), `NODE_ENV`'a göre `.env` / `.env.development` seçimi |
 | `src/config/session.ts` | `SequelizeStore`, `sessionMiddleware` (httpOnly, sameSite lax, 24h, secure auto), `destroyUserSessions` / `destroyStaleUserSessions` (7 gün) |
-| `src/controller/` | 5 controller: `user.ts` (452), `auth.ts` (306), `forum.ts` (317), `admin.ts` (586), `api.ts` (308) |
+| `src/controller/` | 6 controller: `auth.ts` (315), `user.ts` (869), `forum.ts` (347), `admin.ts` (705), `api.ts` (419), `jobApplication.ts` (251) |
 | `src/middleware/` | `csrf.ts` (60), `isAuth.ts` (`requireAuth` + `redirectIfAuth`), `isAdmin.ts` (DB role + session sync), `loadUser.ts` (locals + flash), `rateLimit.ts` |
-| `src/models/` | 10 Sequelize model: `user.ts` (paranoid), `jobs.ts`, `savedJobs.ts`, `post.ts`, `postCategory.ts`, `postLike.ts`, `postReply.ts`, `passwordReset.ts`, `jobRequest.ts`, `log.ts` |
+| `src/models/` | 12 Sequelize model: `user.ts` (paranoid), `jobs.ts`, `savedJobs.ts`, `savedPost.ts`, `post.ts`, `postCategory.ts`, `postLike.ts`, `postReply.ts`, `passwordReset.ts`, `jobRequest.ts`, `jobApplication.ts`, `log.ts` |
 | `src/routers/` | 6 router: `user.ts`, `auth.ts`, `forum.ts`, `admin.ts`, `api.ts`, `sitemap.ts` |
-| `src/views/` | 32 EJS: `partials/` (head/navbar/footer/flash/feed-posts) + `user/` (11) + `forum/` (4) + `admin/` (8) + `auth/` (4) |
+| `src/views/` | 32 EJS: `partials/` (head/navbar/footer/flash/feed-posts) + `user/` (11) + `forum/` (4) + `admin/` (9) + `auth/` (4) + `mail/` (4) |
 | `src/cloud/` | `config.ts` (v2) + `upload.ts` (`uploadImage`, `uploadImageFromBuffer` stream, `deleteImage`, `optimizeUrl` `f_auto,q_auto,c_fill`) |
-| `src/database/` | `connection.ts` (Sequelize init) + `relationships.ts` (10 ilişki) |
+| `src/database/` | `connection.ts` (Sequelize init) + `relationships.ts` (14 ilişki) |
 | `src/helpers/` | `slug.ts` (Türkçe `& → ve`, 0-80), `validation.ts` (regex), `normalizeError.ts` (redact + circular safe), `formatLogMessage.ts` |
 | `src/log/` | `logger.ts` (winston + SequelizeTransport, 5 seviye) |
 | `src/security/` | `helmet.ts` (CSP) |
-| `src/services/` | `mail.ts` (Gmail, `sendResetEmail` 1h link + `sendJobNotification` approved/rejected) |
+| `src/services/` | `mail.ts` (Gmail, `sendResetEmail` 1h link + `sendJobNotification` approved/rejected + `sendApplicationStatus` kabul/red + `sendFirstReplyNotification` ilk yanıt) |
 | `src/types/session.d.ts` | `SessionData` (isAuth, userId, username, role, flash, csrfSecret) |
 | `src/constants/errorCode.ts` | 1001-6004 hata kodları |
-| `src/public/js/app.js` | Toast, theme, navbar, avatar popup (150x150), save/like/reply AJAX, infinite scroll, search, validation |
+| `src/public/js/app.js` | Toast, theme, navbar, avatar popup (150x150), save/like/reply AJAX, infinite scroll, search, validation, `showConfirm` custom modal |
 | `src/public/css/` | `style.css` + `admin.css` + `auth.css` + `forum.css` + `jobs.css` + `profile.css` + `detail.css` + `contact.css` + `page.css` + `error.css` |
 | `src/public/images/` | `logo.webp`, `small-logo.webp`, `full-logo.webp` |
-| `migrations/` | **12** migration (sessions + 11 tablo) |
+| `migrations/` | **15** migration (sessions + 14 tablo) |
 | `seeders/` | 5 seeder: admin (`enes`) + ~25 user + 6 kategori + 4 konu + 45 yanıt + like |
 | `config/config.cjs` | Sequelize CLI config (`NODE_ENV` → `.env` / `.env.development` / `.env.test`) |
 | `vitest.workspace.ts` | 2 proje: `unit` (`test/helpers`, `test/middleware`) + `integration` (`test/integration`, `test/controller`) |
 | `nginx/` | `nginx.conf` (dev, 80 → `app:3000`) + `nginx.prod.conf` (gzip, 80→301 https, 443 TLS1.2/1.3, HSTS, static 1y) |
-| `scripts/` | `reset.bat` / `reset.sh` / `migrate.sh` (`db:drop → db:create → db:migrate → db:seed`) |
+| `scripts/` | `control.bat`, `reset.bat` / `reset.sh` (`db:drop → db:create → db:migrate → db:seed`), `migrate.sh` |
 | `.sequelizerc` | `config` / `models-path` / `migrations-path` / `seeders-path` eşlemesi |
 | `Dockerfile` | Multi-stage: `builder` (npm install + `npm run build`) → `production` (prod deps + dist + views/public/config/migrations/seeders) |
 
@@ -111,9 +111,21 @@ SITE_URL=https://bingolplus.com
 
 - Liste + detay (slug yoksa 301 redirect `slugify` ile)
 - `POST /api/ilan-kaydet/:jobId` AJAX save/unsave toggle (`saved_jobs`, `apiLimiter`)
+- `POST /api/post-kaydet/:postId` AJAX save/unsave toggle (`saved_posts`, `apiLimiter`)
 - Kullanıcı `ilan-ekle` → `job_requests` (`pending`) — `validateJobForm` (title/company/location/description zorunlu, phone/salary regex). Admin onayı gerekir. Aynı anda sadece 1 pending talebe izin (duplicate kontrol)
+- Kullanıcı `ilanlar/:id/basvur` → `job_applications` (`inceleniyor`) — `validateJobApplicationForm`, aynı ilana birden fazla başvuru engeli, başvuruya kayıt (unique constraint). İlan sahibi kendi ilanına başvuru yapamaz
 - Admin `GET/POST /admin/ilan-ekle` direkt `jobs` tablosuna ekler, `GET/POST /admin/ilan-duzenle/:id`, `POST /admin/ilan-sil/:id`
-- Profilimde `kayıtlı ilanlar` + `ilanlarım` listesi, `POST /ilanlar/sil/:id` (sahip kontrolü)
+- Profilimde `kayıtlı ilanlar` + `ilanlarım` + `ilanlarım/:id/basvurular` + `basvurularim` listesi, `POST /ilanlar/sil/:id` (sahip kontrolü)
+
+### Başvuru (İlan Başvurusu) (`POST /ilanlar/:id/basvur`, `GET /profilim/basvurularim`, `GET /profilim/ilanlarim/:jobId/basvurular`, `POST /basvuru/:id/durum`)
+
+- Kullanıcı bir ilana başvurur → `validateJobApplicationForm` (ad/soyad/telefon/email/il-ilce/yas/medeni/öğrenim/sürücü/yabancı dil), `JobApplication.create` (`inceleniyor` status)
+- Aynı ilana birden fazla başvuru engelli (unique constraint + race condition), ilan sahibi kendi ilanına başvuru yapamaz
+- Admin/İlan sahibi `POST /basvuru/:id/durum` ile durum günceller (`inceleniyor` → `kabul_edildi` / `reddedildi`)
+- Kabul/red sonrası `sendApplicationStatus` maili gönderilir (applicant'ın form email'i + account email)
+- `GET /profilim/basvurularim`: tüm başvurular listesi
+- `GET /profilim/ilanlarim/:jobId/basvurular`: belirli bir ilanın başvuruları (sadece ilan sahibi)
+- Model: `jobApplication.ts` (127 satır, `job_applications` tablosu, unique index `unique_job_user_application`) — `src/controller/jobApplication.ts` (251 satır)
 
 ### Forum (`/forum`, `/forum/konu/:id/:slug`, `/forum/konu-ac`, `/forum/akis`, `/forum/akis/:kategori`)
 
@@ -123,19 +135,26 @@ SITE_URL=https://bingolplus.com
 - Detay: likes + `GET /api/yanitlar/:postId?offset=N` 10'ar + like toggle + reply
 - Akış: `getAkisData` ortak — tüm konular full içerik + inline reply formu. Arama: `GET /api/arama?q=` başlık+içerikte `Op.like` (escape) → aynı kart yapısı
 - Kategori filtresi: `/forum/akis/:kategori` (slug)
+- İlk yanıt bildirimi: `POST /api/yanit-ekle/:postId` sonrası `sendFirstReplyNotification` (post sahine email), `post.firstReplyNotifiedAt` atomik claim ile engellenir
 
 ### Admin (`/admin/*`, `requireAdmin` — `session.role === "admin"` + DB `role` sync)
 
 - Dashboard: counts (ilan/konu/kullanıcı/bekleyen talep) — `admin/index.ejs`
 - İlan: ekle/duzenle/sil + talepler listesi (`/admin/talepler`) + detay (`/admin/talep/:id`) → `POST /admin/talep-onayla/:id` (`Job.create` + `approved` + `sendJobNotification`) / `POST /admin/talep-reddet/:id` (`rejected` + mail)
-- Kullanıcı: `GET /admin/kullanicilar` sayfalı (20) + arama (username/email) + `postCount` subquery, `POST /admin/kullanici-ban/:id` (toggle, admin banlanamaz, `destroyUserSessions`), `POST /admin/kullanici-sil/:id` (manuel cascade: SavedJob/PostLike/Reply/Post/Job/PasswordReset/JobRequest + `User.destroy` paranoid soft delete, kendini silemez)
+- Kullanıcı: `GET /admin/kullanicilar` sayfalı (20) + arama (username/email) + `postCount` subquery, `POST /admin/kullanici-ban/:id` (toggle, admin banlanamaz, `destroyUserSessions`), `POST /admin/kullanici-sil/:id` (manuel cascade: SavedJob/PostLike/Reply/Post/Job/PasswordReset/JobRequest/JobApplication + `User.destroy` paranoid soft delete, kendini silemez)
 - Kategori: `GET /admin/kategoriler` (postCount), `POST /admin/kategori-ekle`, `POST /admin/kategori-sil/:id` (ilişkili post varsa engel)
 - Log: `GET /admin/loglar` sayfalı (20) + tip filtresi (`success/info/warning/error/critical`), `POST /admin/log-sil/:id`, `POST /admin/loglar/sil` (tümünü sil)
 - Forum: `POST /admin/konu-sil/:postId` (like + reply cascade)
 
 ### Profil (`/profilim`, `requireAuth`)
 
-- Bilgiler + kayıt tarihi + açtığı konu sayısı + kayıtlı ilanlar (AJAX kaldırma) + kendi ilanları
+- Bilgiler + kayıt tarihi + açtığı konu sayısı + kayıtlı ilanlar (AJAX kaldırma) + kendi ilanları (`POST /ilanlar/sil/:id`) + başvurularım (`/profilim/basvurularim`, `/profilim/ilanlarim/:jobId/basvurular`)
+- Postlarım (`/profilim/postlarim`): yazdığı forum konuları, like/reply/sil, sayfalı
+- Kaydedilen Postlar (`/profilim/kaydedilen-postlar`): kaydettiği forum gönderileri
+- Kaydedilen İlanlar (`/profilim/kaydedilenler`): favori iş ilanları
+- İlanlarım (`/profilim/ilanlarim`): kendi ilanları, başvuru sayısı, `POST /profilim/post-sil/:id`
+- Başvurularım (`/profilim/basvurularim`): gönderilen başvurular, durum güncelleme (`POST /basvuru/:id/durum`)
+- Profil Detay (`/profilim`): avatar (`POST /profilim/resim-yukle`), email, username, role
 - Avatar: `POST /profilim/resim-yukle` — `multer` memory (5MB, `file-type` magic JPEG/PNG/WebP) → `uploadImageFromBuffer` (stream) → Cloudinary → temp yok, `User.update` `CASE` ile atomik günlük limit **2/gün** (`profileImageDate` YYYY-MM-DD + `profileImageCount`), eski resim `deleteImage` (`extractPublicId`). Rate limit `profileUploadLimiter` 5/15dk. Görüntülemede `optimizeUrl(150,150)` + popup `data-attribute`
 
 ### API (`/api/*`)
@@ -145,13 +164,14 @@ SITE_URL=https://bingolplus.com
 | `/api/posts?offset=N&category=slug` | GET | - | general (60/dk) | 10'ar post, offset 0-10000 clamp |
 | `/api/arama?q=` | GET | - | general | Başlık+içerik `LIKE %q%` (escaped) |
 | `/api/ilan-kaydet/:jobId` | POST | ✓ | api (30/dk) | SavedJob toggle |
+| `/api/post-kaydet/:postId` | POST | ✓ | api (30/dk) | SavedPost toggle |
 | `/api/post-begen/:postId` | POST | ✓ | api (30/dk) | PostLike toggle + `posts.likes` sayaç |
 | `/api/yanit-ekle/:postId` | POST | ✓ | forum (10/dk) | `validateReplyContent` 1-10.000 |
 | `/api/yanitlar/:postId?offset=N` | GET | - | general | 10'ar reply |
 
 ### Sitemap & SEO (`GET /sitemap.xml`, `GET /robots.txt`)
 
-- `src/routers/sitemap.ts` (84 satır): 9 statik URL + tüm postlar + tüm joblar (slug + `updatedAt`), `escapeXml`, `Cache-Control: public, max-age=3600`
+- `src/routers/sitemap.ts` (99 satır): 9 statik URL + tüm postlar + tüm joblar (slug + `updatedAt`), `escapeXml`, `Cache-Control: public, max-age=3600`
 - `src/app.ts:68-74` canonical middleware: `SITE_URL + req.path` → `res.locals.canonical` (view `head.ejs`'te `<link rel="canonical">`)
 - `src/public/robots.txt` + Helmet CSP + meta description HTML tag regex temizliği
 
@@ -231,7 +251,7 @@ SALARY_REGEX   = /^[\d\s.,\-₺$€₼]{0,50}$/
 
 ---
 
-## Veritabanı (12 Migration, 10 Model)
+## Veritabanı (15 Migration, 12 Model)
 
 **Tablolar:**
 
@@ -239,26 +259,28 @@ SALARY_REGEX   = /^[\d\s.,\-₺$€₼]{0,50}$/
 |---|---|
 | `users` | `email` (10-50, unique), `username` (2-50, unique), `password` (bcrypt), `role` (user/admin), `banned` (bool), `ip`, `userAgent`, `profileImage` (Cloudinary URL), `profileImageDate` (YYYY-MM-DD), `profileImageCount` (0), `deletedAt` (paranoid soft delete) |
 | `jobs` | `title`, `description` (TEXT), `company`, `location`, `salary?`, `phone?`, `type?`, `userId` FK |
-| `saved_jobs` | `userId` FK + `jobId` FK (unique composite) |
-| `posts` | `userId` FK, `categoryId` FK, `title`, `content` (TEXT), `likes` (0) |
+| `posts` | `userId` FK, `categoryId` FK, `title`, `content` (TEXT), `likes` (0), `firstReplyNotifiedAt` |
 | `post_categories` | `name`, `slug` (unique) — 6 kategori |
 | `post_likes` | `userId` FK + `postId` FK |
 | `post_replies` | `postId` FK, `userId` FK, `content` (TEXT) |
 | `password_resets` | `userId` FK, `token` (UNIQUE, sha256 64 hex), `expiresAt` (1h), `usedAt?` |
 | `job_requests` | `userId` FK + tüm job alanları + `status` (pending/approved/rejected) |
+| `job_applications` | `jobId` FK + `userId` FK + `ad`, `soyad`, `telefon`, `email`, `ilIlce`, `yas`, `medeniDurumu`, `ogrenimDurumu`, `surucuBelgesi`, `yabanciDil`, `ekNotlar`, `status` (inceleniyor/kabul_edildi/reddedildi), unique (jobId, userId) |
+| `saved_jobs` | `userId` FK + `jobId` FK (unique composite) |
+| `saved_posts` | `userId` FK + `postId` FK |
 | `logs` | `type` (success/info/warning/error/critical), `message` (TEXT) |
 | `sessions` | `sid`, `data` (JSON), `expires` — `connect-session-sequelize` |
 | `SequelizeMeta` | migration takibi |
 
-**İlişkiler** (`src/database/relationships.ts:41`): `User↔SavedJob`, `Job↔SavedJob`, `User↔Post`, `PostCategory↔Post`, `User↔PostLike`, `Post↔PostLike`, `User↔PostReply`, `Post↔PostReply`, `User↔PasswordReset`, `User↔JobRequest`
+**İlişkiler** (`src/database/relationships.ts`): `User↔SavedJob`, `Job↔SavedJob`, `User↔SavedPost`, `Post↔SavedPost`, `User↔Post`, `PostCategory↔Post`, `User↔PostLike`, `Post↔PostLike`, `User↔PostReply`, `Post↔PostReply`, `User↔PasswordReset`, `User↔JobRequest`, `User↔JobApplication`, `Job↔JobApplication`
 
-**Migrationlar** (`migrations/`): `20260701124731-sessions.cjs`, `20260701130500-create-users.cjs`, `20260701131000-create-jobs.cjs`, `20260701132000-create-saved-jobs.cjs`, `20260701133000-create-posts.cjs`, `20260701134000-create-post-likes.cjs`, `20260701134500-create-post-replies.cjs`, `20260701140000-create-post-categories.cjs`, `20260701141000-alter-posts-add-category-id.cjs`, `20260705150000-create-password-resets.cjs`, `20260705150030-create-job-requests.cjs`, `20260705160000-create-logs.cjs`
+**Migrationlar** (`migrations/`): `20260701124731-sessions.cjs`, `20260701130500-create-users.cjs`, `20260701131000-create-jobs.cjs`, `20260701132000-create-saved-jobs.cjs`, `20260701133000-create-posts.cjs`, `20260701134000-create-post-likes.cjs`, `20260701134500-create-post-replies.cjs`, `20260701140000-create-post-categories.cjs`, `20260701141000-alter-posts-add-category-id.cjs`, `20260705150000-create-password-resets.cjs`, `20260705150030-create-job-requests.cjs`, `20260705160000-create-logs.cjs`, `20260705170000-create-saved-posts.cjs`, `20260705180000-create-job-applications.cjs`, `20260908120000-add-first-reply-notified-at-to-posts.cjs`
 
 **Seeders** (`seeders/`): `20260701130000-users.cjs` (admin `ADMIN_USERNAME` + ~25 user, hepsi `USER_PASSWORD` bcrypt), `20260701130500-post-categories.cjs` (6), `20260701133500-posts.cjs` (4 konu), `20260701135000-post-replies.cjs` (45 yanıt), `20260701136000-post-likes.cjs`
 
 ---
 
-## Frontend (`src/public/js/app.js` — 1216 satır, IIFE)
+## Frontend (`src/public/js/app.js` — 1743 satır, IIFE)
 
 - **Tema:** `localStorage` + `prefers-color-scheme` + `data-theme` attribute, toggle buton
 - **Flash/Toast:** `flash.ejs` dismiss 4.5s + `toast` AJAX bildirimleri
@@ -296,10 +318,13 @@ SALARY_REGEX   = /^[\d\s.,\-₺$€₼]{0,50}$/
 5. **Cloudinary avatar pipeline** — `multer` memory → `file-type` magic → `uploadImageFromBuffer` stream → `deleteImage` eski, `f_auto,q_auto` optimize, `CASE` atomik 2/gün limit
 6. **Log sistemi** — Winston + SequelizeTransport, 5 tip, DB + console, `normalizeError` ile güvenli
 7. **İlan talebi akışı** — user `job_requests` pending → admin `approve` → `jobs` create + `sendJobNotification` (approved/rejected html) → `rejected` ise kayıt silinmez
-8. **Admin kullanıcı silme** — manuel cascade (8 tablo) + paranoid soft delete, admin kendini/bir admini banlayamaz/silemez, `destroyUserSessions` ile oturum düşürme
-9. **Sonsuz kaydırma** — `IntersectionObserver` + `GET /api/posts?offset` 10'ar, feed + liste, offset 0-10000 clamp
-10. **SEO** — `SITE_URL` canonical middleware + `slugify` 80 char + `sitemap.xml` (1h cache) + `robots.txt`
-11. **Rate limit test bypass** — `isVitest` → `noop`, testlerde gerçek limit tetiklenmez
+8. **İlan başvuru akışı** — user `POST /ilanlar/:id/basvur` → `job_applications` (`inceleniyor`) → ilan sahibi `POST /basvuru/:id/durum` (`kabul_edildi`/`reddedildi`) → `sendApplicationStatus` maili. Unique constraint + race condition guard
+9. **İlk yanıt bildirimi** — `POST /api/yanit-ekle/:postId` sonrası `sendFirstReplyNotification` maili, `Post.firstReplyNotifiedAt` atomik claim ile aynı anda sadece bir bildirim gönderilir
+10. **Admin kullanıcı silme** — manuel cascade (9 tablo: SavedJob/PostLike/Reply/Post/Job/PasswordReset/JobRequest/JobApplication + `User.destroy` paranoid soft delete), admin kendini/bir admini banlayamaz/silemez, `destroyUserSessions` ile oturum düşürme
+11. **SavedPost** — `POST /api/post-kaydet/:postId` ile forum gönderileri kaydedilebilir (`saved_posts` tablosu, unique composite userId+postId)
+12. **Sonsuz kaydırma** — `IntersectionObserver` + `GET /api/posts?offset` 10'ar, feed + liste, offset 0-10000 clamp
+13. **SEO** — `SITE_URL` canonical middleware + `slugify` 80 char + `sitemap.xml` (1h cache) + `robots.txt`
+14. **Rate limit test bypass** — `isVitest` → `noop`, testlerde gerçek limit tetiklenmez
 
 ---
 
