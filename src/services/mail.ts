@@ -4,12 +4,7 @@ import path from "path";
 import config from "../config/config.js";
 
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    connectionTimeout: 10000,
-    socketTimeout: 15000,
+    service: "gmail",
     auth: {
         user: config.email.mail,
         pass: config.email.password
