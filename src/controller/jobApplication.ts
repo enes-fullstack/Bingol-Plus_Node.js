@@ -6,6 +6,7 @@ import { validateJobApplicationForm } from "../helpers/validation.js";
 import { error } from "../log/logger.js";
 import { normalizeError } from "../helpers/normalizeError.js";
 import { slugify } from "../helpers/slug.js";
+import { sendApplicationStatus } from "../services/mail.js";
 
 // POST /ilanlar/:id/basvur
 export const applyPost = async (req: Request, res: Response): Promise<void> => {
@@ -216,6 +217,26 @@ export const updateStatusPost = async (req: Request, res: Response): Promise<voi
 
     try {
         await application.update({ status: rawStatus as any });
+        if (rawStatus === "kabul_edildi" || rawStatus === "reddedildi") {
+            // Send to applicant's account email (primary) and form email as fallback
+            let recipientEmail = application.email;
+            try {
+                const applicantUser = await User.findByPk(application.userId, { attributes: ["email"] });
+                if (applicantUser && applicantUser.email) {
+                    recipientEmail = applicantUser.email;
+                    // If form email differs, also try to notify that address (optional)
+                    if (application.email && application.email !== applicantUser.email) {
+                        sendApplicationStatus(application.email, job.title, rawStatus as "kabul_edildi" | "reddedildi").catch((err) => {
+                            error(`Başvuru maili (form email) gönderilemedi (appId: ${appId}, to: ${application.email}): ${normalizeError(err)}`);
+                        });
+                    }
+                }
+            } catch {}
+            // Primary mail to account email
+            sendApplicationStatus(recipientEmail, job.title, rawStatus as "kabul_edildi" | "reddedildi").catch((err) => {
+                error(`Başvuru maili gönderilemedi (appId: ${appId}, to: ${recipientEmail}): ${normalizeError(err)}`);
+            });
+        }
         let label = "İnceleniyor";
         if (rawStatus === "kabul_edildi") label = "Kabul Edildi";
         else if (rawStatus === "reddedildi") label = "Reddedildi";

@@ -4,6 +4,7 @@
 <head>
   <%- include('../partials/head', { title: 'Profilim - Bingöl Plus', description: 'Bingöl Plus profil sayfası. Kaydettiğiniz ilanları görüntüleyin ve profil bilgilerinizi düzenleyin.' }) %>
   <title>Profilim - Bingöl Plus</title>
+  <link rel="stylesheet" href="/vendor/cropper/cropper.min.css">
   <link rel="stylesheet" href="/css/profile.css">
 </head>
 
@@ -126,6 +127,34 @@
     </div>
   </div>
 
+  <!-- Crop Modal -->
+  <div id="crop-modal" class="crop-modal" style="display:none;" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="crop-modal-title">
+    <div id="crop-modal-backdrop" class="crop-modal-backdrop"></div>
+    <div class="crop-modal-content" role="document">
+      <div class="crop-modal-header">
+        <h3 id="crop-modal-title">Fotoğrafı Kırp</h3>
+        <button type="button" id="crop-close" class="crop-close" aria-label="Kapat">&times;</button>
+      </div>
+      <div class="crop-modal-body">
+        <div class="crop-image-wrap">
+          <img id="crop-image" src="" alt="Kırpılacak fotoğraf" style="display:block;max-width:100%;">
+        </div>
+        <div class="crop-zoom-controls">
+          <button type="button" id="crop-zoom-out" class="btn btn-ghost btn-sm" aria-label="Uzaklaştır">−</button>
+          <span class="crop-zoom-label">Zoom</span>
+          <button type="button" id="crop-zoom-in" class="btn btn-ghost btn-sm" aria-label="Yakınlaştır">+</button>
+        </div>
+        <p class="crop-hint">Kare alan içinde kalacak şekilde sürükleyin ve yakınlaştırın.</p>
+        <div id="crop-error" class="field-error" style="text-align:center;min-height:18px;margin-top:8px;"></div>
+      </div>
+      <div class="crop-modal-actions">
+        <button type="button" id="crop-cancel" class="btn btn-ghost">Vazgeç</button>
+        <button type="button" id="crop-confirm" class="btn btn-solid">Yükle</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/cropper/cropper.min.js"></script>
   <%- include('../partials/footer') %>
 
 </body>

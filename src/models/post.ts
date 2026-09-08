@@ -9,6 +9,7 @@ class Post extends Model<InferAttributes<Post>, InferCreationAttributes<Post>> {
     declare title: string;
     declare content: string;
     declare likes: CreationOptional<number>;
+    declare firstReplyNotifiedAt: CreationOptional<Date | null>;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 };
@@ -40,6 +41,12 @@ Post.init({
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
+    },
+    firstReplyNotifiedAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+        defaultValue: null,
+        field: "first_reply_notified_at"
     },
     createdAt: {
         type: DataTypes.DATE,

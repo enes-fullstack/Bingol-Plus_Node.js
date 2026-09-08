@@ -287,7 +287,9 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
 };
 
 export const profileImageUpload_post = async (req: Request, res: Response): Promise<void> => {
+    const isAjax = (req.headers["x-requested-with"] === "XMLHttpRequest") || (req.headers.accept || "").includes("application/json");
     if (!req.session.userId) {
+        if (isAjax) { res.status(401).json({ error: "Giriş yapmalısınız." }); return; }
         req.session.flash = { type: "error", message: "Giriş yapmalısınız." };
         res.redirect("/giris-yap");
         return;
@@ -297,6 +299,7 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
     upload(req, res, async (err: unknown) => {
         if (err) {
             const message = err instanceof Error ? err.message : "Dosya yüklenirken bir hata oluştu.";
+            if (isAjax) { res.status(400).json({ error: message }); return; }
             req.session.flash = { type: "error", message };
             res.redirect("/profilim");
             return;
@@ -308,12 +311,14 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
         const isBodyValid = bodyToken ? validateToken(bodyToken, req.session.csrfSecret!) : false;
         const isHeaderValid = headerToken ? validateToken(headerToken, req.session.csrfSecret!) : false;
         if (!isBodyValid && !isHeaderValid) {
+            if (isAjax) { res.status(403).json({ error: "Güvenlik doğrulaması başarısız." }); return; }
             req.session.flash = { type: "error", message: "Güvenlik doğrulaması başarısız." };
             res.redirect("/profilim");
             return;
         }
 
         if (!req.file) {
+            if (isAjax) { res.status(400).json({ error: "Lütfen bir dosya seçin." }); return; }
             req.session.flash = { type: "error", message: "Lütfen bir dosya seçin." };
             res.redirect("/profilim");
             return;
@@ -324,6 +329,7 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
             const { fileTypeFromBuffer } = await import("file-type");
             const ft = await fileTypeFromBuffer(req.file.buffer);
             if (!ft || !ALLOWED_MIMES.includes(ft.mime)) {
+                if (isAjax) { res.status(400).json({ error: "Yalnızca JPEG, PNG ve WebP formatları kabul edilir." }); return; }
                 req.session.flash = { type: "error", message: "Yalnızca JPEG, PNG ve WebP formatları kabul edilir." };
                 res.redirect("/profilim");
                 return;
@@ -334,13 +340,14 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
                 "image/webp": ["webp"]
             };
             if (!allowedExtsByMime[ft.mime]?.includes(ft.ext)) {
+                if (isAjax) { res.status(400).json({ error: "Yalnızca JPEG, PNG ve WebP formatları kabul edilir." }); return; }
                 req.session.flash = { type: "error", message: "Yalnızca JPEG, PNG ve WebP formatları kabul edilir." };
                 res.redirect("/profilim");
                 return;
             }
         } catch (e) {
-            console.log("Error Code:", 3005);
             error(`Dosya tipi doğrulanamadı (kullanıcı ID: ${req.session.userId}): ${normalizeError(e)}`);
+            if (isAjax) { res.status(400).json({ error: "Dosya doğrulanamadı." }); return; }
             req.session.flash = { type: "error", message: "Dosya doğrulanamadı." };
             res.redirect("/profilim");
             return;
@@ -358,8 +365,8 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
         try {
             result = await uploadImageFromBuffer(req.file.buffer);
         } catch (uploadErr) {
-            console.log("Error Code:", 3005);
             error(`Profil resmi yüklenemedi (kullanıcı ID: ${req.session.userId}): ${normalizeError(uploadErr)}`);
+            if (isAjax) { res.status(500).json({ error: "Dosya yüklenirken bir hata oluştu." }); return; }
             req.session.flash = { type: "error", message: "Dosya yüklenirken bir hata oluştu." };
             res.redirect("/profilim");
             return;
@@ -389,14 +396,15 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
             if (affected === 0) {
                 // Limit aşıldı — yeni yüklenen Cloudinary görselini sil (orphan önle)
                 await deleteImage(result.publicId).catch(() => {});
+                if (isAjax) { res.status(429).json({ error: "Profil fotoğrafını günde en fazla 2 kez değiştirebilirsiniz." }); return; }
                 req.session.flash = { type: "error", message: "Profil fotoğrafını günde en fazla 2 kez değiştirebilirsiniz." };
                 res.redirect("/profilim");
                 return;
             }
         } catch (dbErr) {
             await deleteImage(result.publicId).catch(() => {});
-            console.log("Error Code:", 3005);
             error(`Profil resmi DB güncellenemedi (kullanıcı ID: ${req.session.userId}): ${normalizeError(dbErr)}`);
+            if (isAjax) { res.status(500).json({ error: "Dosya yüklenirken bir hata oluştu." }); return; }
             req.session.flash = { type: "error", message: "Dosya yüklenirken bir hata oluştu." };
             res.redirect("/profilim");
             return;
@@ -410,6 +418,14 @@ export const profileImageUpload_post = async (req: Request, res: Response): Prom
             }
         }
 
+        if (isAjax) {
+            // Ensure flash is saved before responding so next GET shows message if needed, but also return JSON for XHR
+            req.session.flash = { type: "success", message: "Profil resmi güncellendi." };
+            // Save session before json response to ensure flash persists
+            await new Promise<void>((resolve) => req.session.save(() => resolve()));
+            res.json({ success: true, message: "Profil resmi güncellendi.", url: result.url });
+            return;
+        }
         req.session.flash = { type: "success", message: "Profil resmi güncellendi." };
         res.redirect("/profilim");
     });

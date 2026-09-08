@@ -303,7 +303,8 @@ html[data-theme="dark"] .save-post-btn.saved:hover {
 }
 
 .reply-avatar[data-avatar]:not([data-avatar=""]),
-.reply-avatar-img[data-avatar]:not([data-avatar=""]) {
+.reply-avatar-img[data-avatar]:not([data-avatar=""]),
+.reply-head strong[data-avatar]:not([data-avatar=""]) {
   cursor: pointer;
 }
 

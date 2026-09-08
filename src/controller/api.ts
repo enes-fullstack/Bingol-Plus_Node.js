@@ -15,6 +15,7 @@ import { slugify } from "../helpers/slug.js";
 import { validateReplyContent } from "../helpers/validation.js";
 import { error } from "../log/logger.js";
 import { normalizeError } from "../helpers/normalizeError.js";
+import { sendFirstReplyNotification } from "../services/mail.js";
 
 const sortRepliesAdminFirst = <T extends { User?: { role?: string } | null; createdAt: any }>(replies: T[]): T[] => {
     return [...replies].sort((a, b) => {
@@ -329,6 +330,48 @@ export const addReply = async (req: Request, res: Response): Promise<void> => {
         }
 
         res.status(201).json({ reply: ru });
+
+        // Fire-and-forget first-reply notification (does not block response)
+        void (async () => {
+            const replierId = req.session.userId as number;
+            try {
+                // Fetch post with title for URL and owner check
+                const post = await Post.findByPk(postId, { attributes: ["id", "userId", "title", "firstReplyNotifiedAt"] });
+                if (!post) return;
+                // No notification for own post
+                if ((post as any).userId === replierId) return;
+                // Already notified
+                if ((post as any).firstReplyNotifiedAt) return;
+
+                // Fetch owner
+                const owner = await User.findByPk((post as any).userId, { attributes: ["email", "username", "banned"] });
+                if (!owner || !owner.email || (owner as any).banned) return;
+
+                // Atomically claim notification right: only one concurrent request will affect 1 row
+                const [affected] = await Post.update(
+                    { firstReplyNotifiedAt: new Date() } as any,
+                    { where: { id: postId, firstReplyNotifiedAt: null } as any }
+                );
+                if (affected !== 1) return; // another request already claimed
+
+                // Build post URL using existing SITE_URL / slugify logic
+                const rawBase = process.env.SITE_URL || "https://bingolplus.com";
+                const baseUrl = rawBase.replace(/\/$/, "");
+                const postUrl = `${baseUrl}/forum/konu/${postId}/${slugify((post as any).title)}`;
+
+                try {
+                    await sendFirstReplyNotification(owner.email, owner.username, (post as any).title, postUrl);
+                } catch (mailErr) {
+                    // Revert claim so next reply can retry, and log error
+                    try {
+                        await Post.update({ firstReplyNotifiedAt: null } as any, { where: { id: postId } as any });
+                    } catch {}
+                    error(`İlk yanıt bildirimi gönderilemedi (postId: ${postId}, ownerId: ${(post as any).userId}): ${normalizeError(mailErr)}`);
+                }
+            } catch (err) {
+                error(`İlk yanıt bildirimi kontrol hatası (postId: ${postId}): ${normalizeError(err)}`);
+            }
+        })();
     } catch (err) {
         console.log("Error Code:", 4003);
         error(`Yanıt ekleme hatası (kullanıcı ID: ${req.session.userId}, post ID: ${req.params.postId}): ${normalizeError(err)}`);

@@ -576,7 +576,8 @@ html[data-theme="dark"] .profile-posts .action-btn.delete-btn:hover {
 }
 
 .profile-posts .reply-avatar[data-avatar]:not([data-avatar=""]),
-.profile-posts .reply-avatar-img[data-avatar]:not([data-avatar=""]) { cursor: pointer; }
+.profile-posts .reply-avatar-img[data-avatar]:not([data-avatar=""]),
+.profile-posts .reply-head strong[data-avatar]:not([data-avatar=""]) { cursor: pointer; }
 
 .profile-posts .reply-body { flex: 1; min-width: 0; }
 
@@ -731,4 +732,195 @@ html[data-theme="dark"] .save-post-btn.saved:hover {
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+}
+
+/* ---------- CROP MODAL ---------- */
+.crop-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.crop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  z-index: 0;
+}
+
+.crop-modal-content {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+  width: 100%;
+  max-width: min(92vw, 720px);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: cropIn 0.22s ease-out;
+}
+
+@keyframes cropIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.crop-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--stone-line);
+}
+
+.crop-modal-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.crop-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-close:hover {
+  background: var(--paper-raised);
+  border-color: var(--stone-line);
+  color: var(--ink);
+}
+
+.crop-modal-body {
+  padding: 16px 18px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.crop-image-wrap {
+  width: 100%;
+  max-height: 62vh;
+  min-height: 320px;
+  overflow: hidden;
+  background: #0f1110;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.crop-image-wrap img {
+  display: block;
+  max-width: 100%;
+  max-height: 62vh;
+}
+
+.crop-zoom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.crop-zoom-controls .btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.crop-zoom-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  min-width: 48px;
+  text-align: center;
+}
+
+.crop-hint {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.crop-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--stone-line);
+  background: var(--paper);
+}
+
+.crop-modal-actions .btn {
+  min-width: 96px;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .crop-modal-content {
+    max-width: 96vw;
+    max-height: 92vh;
+  }
+  .crop-image-wrap {
+    max-height: 58vh;
+    min-height: 280px;
+  }
+  .crop-image-wrap img {
+    max-height: 58vh;
+  }
+}
+
+html[data-theme="dark"] .crop-modal-content {
+  background: #1E2320;
+  border-color: var(--stone-line);
+}
+
+html[data-theme="dark"] .crop-modal-header {
+  border-bottom-color: var(--stone-line);
+}
+
+html[data-theme="dark"] .crop-modal-actions {
+  background: #181C19;
+  border-top-color: var(--stone-line);
+}
+
+html[data-theme="dark"] .crop-image-wrap {
+  background: #0a0c0b;
+}
+
+/* Cropper yuvarlak alan — profil avatarı da yuvarlak olduğu için */
+.crop-image-wrap .cropper-view-box,
+.crop-image-wrap .cropper-face {
+  border-radius: 50%;
+}
+.crop-image-wrap .cropper-view-box {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.9);
 }

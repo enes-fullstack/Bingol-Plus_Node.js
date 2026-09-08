@@ -344,22 +344,132 @@
     });
   })();
 
-  /* ── Profile Avatar Upload ── */
+  /* ── Profile Avatar Upload + Crop (Cropper.js 1:1) ── */
   (function () {
     var avatarInput = document.getElementById("avatar-input");
     var avatarPreview = document.getElementById("avatar-preview");
     var avatarSubmit = document.getElementById("avatar-submit");
     var avatarError = document.getElementById("avatar-error");
+    var avatarForm = document.getElementById("avatar-form");
     if (!avatarInput) return;
+
+    var cropModal = document.getElementById("crop-modal");
+    var cropBackdrop = document.getElementById("crop-modal-backdrop");
+    var cropImage = document.getElementById("crop-image");
+    var cropCancel = document.getElementById("crop-cancel");
+    var cropClose = document.getElementById("crop-close");
+    var cropConfirm = document.getElementById("crop-confirm");
+    var cropZoomIn = document.getElementById("crop-zoom-in");
+    var cropZoomOut = document.getElementById("crop-zoom-out");
+    var cropError = document.getElementById("crop-error");
+
+    var cropper = null;
+    var originalFile = null;
+    var originalFileType = "";
+
+    function destroyCropper() {
+      if (cropper) {
+        try { cropper.destroy(); } catch (e) {}
+        cropper = null;
+      }
+    }
+
+    function setError(msg) {
+      if (avatarError) avatarError.textContent = msg;
+      if (cropError) cropError.textContent = msg;
+      if (msg) showToast(msg);
+    }
+    function clearError() {
+      if (avatarError) avatarError.textContent = "";
+      if (cropError) cropError.textContent = "";
+    }
+
+    function closeCropModal(resetInput) {
+      destroyCropper();
+      if (cropModal) {
+        cropModal.style.display = "none";
+        cropModal.setAttribute("aria-hidden", "true");
+      }
+      document.body.style.overflow = "";
+      // Reset preview elements (legacy)
+      if (avatarPreview) { avatarPreview.style.display = "none"; avatarPreview.innerHTML = ""; }
+      if (avatarSubmit) { avatarSubmit.style.display = "none"; }
+      if (resetInput) {
+        avatarInput.value = "";
+        originalFile = null;
+        originalFileType = "";
+      }
+    }
+
+    function openCropModal(dataUrl) {
+      clearError();
+      if (!cropModal || !cropImage) return;
+      cropImage.src = dataUrl;
+      cropModal.style.display = "flex";
+      cropModal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+
+      // Wait for image to load before initializing cropper
+      var initCropper = function () {
+        destroyCropper();
+        if (typeof Cropper === "undefined") {
+          setError("Kırpma bileşeni yüklenemedi.");
+          return;
+        }
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 1,
+          viewMode: 1,
+          guides: true,
+          center: true,
+          highlight: false,
+          background: false,
+          autoCropArea: 1,
+          responsive: true,
+          movable: true,
+          zoomable: true,
+          scalable: false,
+          rotatable: false,
+          dragMode: "move",
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          minCropBoxWidth: 50,
+          minCropBoxHeight: 50
+        });
+      };
+
+      if (cropImage.complete) {
+        // Slight delay to ensure layout
+        setTimeout(initCropper, 30);
+      } else {
+        cropImage.onload = function () { setTimeout(initCropper, 30); };
+        cropImage.onerror = function () {
+          setError("Görüntü yüklenemedi.");
+          closeCropModal(false);
+        };
+      }
+    }
+
+    // Ensure legacy submit button never triggers (prevent non-cropped upload via form submit)
+    if (avatarForm) {
+      avatarForm.addEventListener("submit", function (e) {
+        // If crop modal is open or cropper flow is active, block native form submit
+        // We always handle upload via cropConfirm, so block any direct form submit
+        e.preventDefault();
+        // If user pressed Enter or clicked legacy submit, reopen crop if file exists
+        if (originalFile && !cropper && avatarInput.files && avatarInput.files[0]) {
+          // Fallback: trigger change flow again
+          var ev = new Event("change");
+          avatarInput.dispatchEvent(ev);
+        }
+      });
+    }
 
     avatarInput.addEventListener("change", function () {
       var file = avatarInput.files[0];
-      avatarError.textContent = "";
+      clearError();
 
       if (!file) {
-        avatarPreview.style.display = "none";
-        avatarPreview.innerHTML = "";
-        avatarSubmit.style.display = "none";
+        closeCropModal(false);
         return;
       }
 
@@ -368,79 +478,292 @@
       var ext = "." + file.name.split(".").pop().toLowerCase();
 
       if (!allowedTypes.includes(file.type) || !allowedExts.includes(ext)) {
-        avatarError.textContent = "Yalnızca JPEG, PNG ve WebP formatları kabul edilir.";
+        setError("Yalnızca JPEG, PNG ve WebP formatları kabul edilir.");
         avatarInput.value = "";
-        avatarPreview.style.display = "none";
-        avatarPreview.innerHTML = "";
-        avatarSubmit.style.display = "none";
+        closeCropModal(false);
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        avatarError.textContent = "Dosya boyutu en fazla 5 MB olabilir.";
+        setError("Dosya boyutu en fazla 5 MB olabilir.");
         avatarInput.value = "";
-        avatarPreview.style.display = "none";
-        avatarPreview.innerHTML = "";
-        avatarSubmit.style.display = "none";
+        closeCropModal(false);
         return;
       }
 
+      originalFile = file;
+      originalFileType = file.type;
+
       var reader = new FileReader();
       reader.onload = function (e) {
-        avatarPreview.innerHTML = '<img src="' + e.target.result + '" class="avatar-preview-img" loading="lazy">';
-        avatarPreview.style.display = "block";
-        avatarSubmit.style.display = "inline-block";
+        openCropModal(e.target.result);
+      };
+      reader.onerror = function () {
+        setError("Dosya okunamadı.");
+        avatarInput.value = "";
       };
       reader.readAsDataURL(file);
     });
 
-    var avatarForm = document.getElementById("avatar-form");
-    if (avatarForm && avatarSubmit) {
-      avatarForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        if (!avatarInput.files || !avatarInput.files[0]) return;
-        if (avatarSubmit.disabled) return;
-        avatarSubmit.textContent = "Yükleniyor...";
-        avatarSubmit.disabled = true;
-        avatarSubmit.style.opacity = "0.7";
-        avatarSubmit.style.cursor = "wait";
+    function handleCancel() { closeCropModal(true); }
 
-        var formData = new FormData(avatarForm);
-        var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
-        // Fallback to hidden input if meta missing
+    if (cropCancel) cropCancel.addEventListener("click", handleCancel);
+    if (cropClose) cropClose.addEventListener("click", handleCancel);
+    if (cropBackdrop) cropBackdrop.addEventListener("click", handleCancel);
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && cropModal && cropModal.style.display !== "none") {
+        handleCancel();
+      }
+    });
+
+    if (cropZoomIn) {
+      cropZoomIn.addEventListener("click", function () {
+        if (cropper) cropper.zoom(0.1);
+      });
+    }
+    if (cropZoomOut) {
+      cropZoomOut.addEventListener("click", function () {
+        if (cropper) cropper.zoom(-0.1);
+      });
+    }
+
+    function getCsrfToken() {
+      var meta = document.querySelector('meta[name="csrf-token"]');
+      var t = meta ? meta.getAttribute("content") : "";
+      if (!t && avatarForm) {
+        var hidden = avatarForm.querySelector('input[name="_csrf"]');
+        if (hidden) t = hidden.value;
+      }
+      return t;
+    }
+
+    if (cropConfirm) {
+      cropConfirm.addEventListener("click", function () {
+        if (!cropper || !originalFile) return;
+        if (cropConfirm.disabled) return;
+
+        var csrfToken = getCsrfToken();
         if (!csrfToken) {
-          var hidden = avatarForm.querySelector('input[name="_csrf"]');
-          if (hidden) csrfToken = hidden.value;
+          setError("Güvenlik anahtarı bulunamadı.");
+          return;
+        }
+        clearError();
+
+        cropConfirm.textContent = "Yükleniyor...";
+        cropConfirm.disabled = true;
+        cropConfirm.style.opacity = "0.7";
+        cropConfirm.style.cursor = "wait";
+        if (cropCancel) cropCancel.disabled = true;
+
+        var canvas;
+        try {
+          canvas = cropper.getCroppedCanvas({
+            imageSmoothingQuality: "high",
+            fillColor: "#fff"
+          });
+        } catch (err) {
+          setError("Kırpma sırasında hata oluştu.");
+          cropConfirm.textContent = "Yükle";
+          cropConfirm.disabled = false;
+          cropConfirm.style.opacity = "1";
+          cropConfirm.style.cursor = "pointer";
+          if (cropCancel) cropCancel.disabled = false;
+          return;
         }
 
-        fetch(avatarForm.action, {
-          method: "POST",
-          headers: { "csrf-token": csrfToken },
-          body: formData
-        })
-          .then(function (res) {
-            // Server redirects with flash — follow redirect
-            if (res.redirected) {
-              window.location.href = res.url;
-            } else if (res.ok) {
-              window.location.href = "/profilim";
-            } else {
-              return res.text().then(function (t) {
-                avatarError.textContent = "Yükleme başarısız.";
-                avatarSubmit.textContent = "Yükle";
-                avatarSubmit.disabled = false;
-                avatarSubmit.style.opacity = "1";
-                avatarSubmit.style.cursor = "pointer";
-              });
+        if (!canvas) {
+          setError("Kırpma alanını kontrol edin.");
+          cropConfirm.textContent = "Yükle";
+          cropConfirm.disabled = false;
+          cropConfirm.style.opacity = "1";
+          cropConfirm.style.cursor = "pointer";
+          if (cropCancel) cropCancel.disabled = false;
+          return;
+        }
+
+        var mime = originalFileType;
+        if (!["image/jpeg", "image/png", "image/webp"].includes(mime)) mime = "image/jpeg";
+        var quality = 1.0;
+
+        var blobHandler = function (blob) {
+          if (!blob) {
+            if (mime === "image/webp") {
+              mime = "image/jpeg";
+              canvas.toBlob(blobHandler, "image/jpeg", 1.0);
+              return;
             }
-          })
-          .catch(function () {
-            avatarError.textContent = "Bağlantı hatası.";
-            avatarSubmit.textContent = "Yükle";
-            avatarSubmit.disabled = false;
-            avatarSubmit.style.opacity = "1";
-            avatarSubmit.style.cursor = "pointer";
-          });
+            setError("Kırpılmış görüntü oluşturulamadı.");
+            cropConfirm.textContent = "Yükle";
+            cropConfirm.disabled = false;
+            cropConfirm.style.opacity = "1";
+            cropConfirm.style.cursor = "pointer";
+            if (cropCancel) cropCancel.disabled = false;
+            return;
+          }
+
+          if (blob.size > 5 * 1024 * 1024) {
+            setError("Kırpılmış görüntü 5 MB'ı aşıyor.");
+            cropConfirm.textContent = "Yükle";
+            cropConfirm.disabled = false;
+            cropConfirm.style.opacity = "1";
+            cropConfirm.style.cursor = "pointer";
+            if (cropCancel) cropCancel.disabled = false;
+            return;
+          }
+
+          var extMap = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp" };
+          var outExt = extMap[mime] || ".jpg";
+          var baseName = originalFile.name ? originalFile.name.replace(/\.[^/.]+$/, "") : "avatar";
+          if (!baseName) baseName = "avatar";
+          var outName = baseName + outExt;
+          var croppedFile;
+          try {
+            croppedFile = new File([blob], outName, { type: mime });
+          } catch (e) {
+            // Fallback for browsers without File constructor support with type
+            croppedFile = blob;
+            croppedFile.name = outName;
+          }
+
+          var formData = new FormData();
+          formData.append("_csrf", csrfToken);
+          formData.append("profileImage", croppedFile, outName);
+
+          // Use XMLHttpRequest for AJAX JSON (avoids redirect follow issues that caused Failed to fetch)
+          var xhr = new XMLHttpRequest();
+          xhr.open("POST", "/profilim/resim-yukle", true);
+          xhr.withCredentials = true;
+          xhr.timeout = 30000;
+          xhr.setRequestHeader("csrf-token", csrfToken);
+          xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+          xhr.setRequestHeader("Accept", "application/json");
+          // Let browser set Content-Type with boundary automatically
+          xhr.onload = function () {
+            var t = xhr.responseText || "";
+            var isJson = (xhr.getResponseHeader("content-type") || "").indexOf("application/json") !== -1;
+            var data = null;
+            if (isJson) {
+              try { data = JSON.parse(t); } catch (e) {}
+            }
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (data && data.success) {
+                showToast(data.message || "Profil resmi güncellendi.");
+                setTimeout(function(){ window.location.href = "/profilim"; }, 400);
+              } else if (isJson && data && data.error) {
+                setError(data.error + " (kod " + xhr.status + ")");
+                cropConfirm.textContent = "Yükle";
+                cropConfirm.disabled = false;
+                cropConfirm.style.opacity = "1";
+                cropConfirm.style.cursor = "pointer";
+                if (cropCancel) cropCancel.disabled = false;
+              } else {
+                window.location.href = "/profilim";
+              }
+            } else {
+              var msg = "Yükleme başarısız.";
+              if (data && data.error) msg = data.error;
+              else if (xhr.status === 403) msg = "Güvenlik doğrulaması başarısız. Sayfayı yenileyip tekrar deneyin.";
+              else if (xhr.status === 413) msg = "Dosya çok büyük.";
+              else if (xhr.status === 429) msg = "Çok fazla istek. Lütfen biraz bekleyin.";
+              else if (t && t.length < 2000) {
+                if (t.indexOf("Güvenlik") !== -1) msg = "Güvenlik doğrulaması başarısız.";
+                else if (t.indexOf("günde en fazla") !== -1) msg = "Profil fotoğrafını günde en fazla 2 kez değiştirebilirsiniz.";
+                else if (t.indexOf("Yalnızca JPEG") !== -1) msg = "Yalnızca JPEG, PNG ve WebP kabul edilir.";
+                else if (t.indexOf("CSRF") !== -1) msg = "Güvenlik doğrulaması başarısız.";
+              }
+              setError(msg + " (kod " + xhr.status + ")");
+              cropConfirm.textContent = "Yükle";
+              cropConfirm.disabled = false;
+              cropConfirm.style.opacity = "1";
+              cropConfirm.style.cursor = "pointer";
+              if (cropCancel) cropCancel.disabled = false;
+            }
+          };
+          xhr.onerror = function () {
+            fetchFallback();
+          };
+          xhr.ontimeout = function () {
+            setError("Yükleme zaman aşımına uğradı. Lütfen tekrar deneyin.");
+            cropConfirm.textContent = "Yükle";
+            cropConfirm.disabled = false;
+            cropConfirm.style.opacity = "1";
+            cropConfirm.style.cursor = "pointer";
+            if (cropCancel) cropCancel.disabled = false;
+          };
+          xhr.onabort = function () {
+            setError("Yükleme iptal edildi.");
+            cropConfirm.textContent = "Yükle";
+            cropConfirm.disabled = false;
+            cropConfirm.style.opacity = "1";
+            cropConfirm.style.cursor = "pointer";
+            if (cropCancel) cropCancel.disabled = false;
+          };
+          function fetchFallback() {
+            fetch("/profilim/resim-yukle", {
+              method: "POST",
+              headers: { "csrf-token": csrfToken, "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" },
+              body: formData,
+              credentials: "same-origin"
+            }).then(function (res) {
+              var ctype = res.headers.get("content-type") || "";
+              var isJson = ctype.indexOf("application/json") !== -1;
+              if (isJson) {
+                return res.json().then(function(data){
+                  if (res.ok && data && data.success) {
+                    showToast(data.message || "Profil resmi güncellendi.");
+                    setTimeout(function(){ window.location.href="/profilim"; }, 400);
+                  } else {
+                    var msg = (data && data.error) || "Yükleme başarısız (yedek).";
+                    setError(msg + " (kod " + res.status + ")");
+                    cropConfirm.textContent = "Yükle";
+                    cropConfirm.disabled = false;
+                    cropConfirm.style.opacity = "1";
+                    cropConfirm.style.cursor = "pointer";
+                    if (cropCancel) cropCancel.disabled = false;
+                  }
+                });
+              }
+              if (res.ok || res.redirected || (res.status >= 200 && res.status < 400)) {
+                window.location.href = "/profilim";
+              } else {
+                return res.text().then(function (t) {
+                  var msg = "Yükleme başarısız (yedek).";
+                  if (res.status === 403) msg = "Güvenlik doğrulaması başarısız. Sayfayı yenileyin.";
+                  setError(msg + " (kod " + res.status + ")");
+                  cropConfirm.textContent = "Yükle";
+                  cropConfirm.disabled = false;
+                  cropConfirm.style.opacity = "1";
+                  cropConfirm.style.cursor = "pointer";
+                  if (cropCancel) cropCancel.disabled = false;
+                });
+              }
+            }).catch(function (err) {
+              var detail = err && err.message ? " ("+err.message+")" : "";
+              setError("Bağlantı hatası. Lütfen internet bağlantınızı kontrol edin. (ağ hatası"+detail+")");
+              cropConfirm.textContent = "Yükle";
+              cropConfirm.disabled = false;
+              cropConfirm.style.opacity = "1";
+              cropConfirm.style.cursor = "pointer";
+              if (cropCancel) cropCancel.disabled = false;
+            });
+          }
+          try {
+            xhr.send(formData);
+          } catch (err) {
+            setError("Bağlantı hatası. (" + (err && err.message ? err.message : "gönderilemedi") + ")");
+            cropConfirm.textContent = "Yükle";
+            cropConfirm.disabled = false;
+            cropConfirm.style.opacity = "1";
+            cropConfirm.style.cursor = "pointer";
+            if (cropCancel) cropCancel.disabled = false;
+          }
+        };
+        try {
+          canvas.toBlob(blobHandler, mime, quality);
+        } catch (e) {
+          canvas.toBlob(blobHandler, "image/jpeg", 1.0);
+        }
       });
     }
   })();
@@ -570,11 +893,12 @@
         var initial = escapeHtml(r.User.username.charAt(0).toUpperCase());
         avatarHtml = initial;
       }
+      var nameAvatarAttr = r.User && r.User.profileImage ? ' data-avatar="' + escapeHtml(r.User.profileImage) + '"' : ' data-avatar=""';
       return (
         '<div class="reply-item">' +
         '<div class="reply-avatar' + avatarAdminClass + '" ' + avatarAttr + ">" + avatarHtml + "</div>" +
         '<div class="reply-body">' +
-        '<div class="reply-head"><strong' + adminClass + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
+        '<div class="reply-head"><strong' + adminClass + nameAvatarAttr + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
         '<div class="reply-text">' + content + "</div>" +
         "</div>" +
         "</div>"
@@ -763,18 +1087,19 @@
     var avatarAdminClass = isAdmin ? ' admin-avatar' : "";
     var tickHtml = isAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
     var avatarHtml;
+    var nameAvatarAttr = r.User && r.User.profileImage ? ' data-avatar="' + escapeHtml(r.User.profileImage) + '"' : ' data-avatar=""';
     if (r.User && r.User.avatarUrl) {
       var profileImage = r.User.profileImage || "";
       avatarHtml = '<img src="' + escapeHtml(r.User.avatarUrl) + '" alt="" class="reply-avatar-img" loading="lazy" data-avatar="' + escapeHtml(profileImage) + '">';
     } else {
       var initial = escapeHtml(r.User ? r.User.username.charAt(0).toUpperCase() : "?");
-      avatarHtml = '<div class="reply-avatar' + avatarAdminClass + '">' + initial + "</div>";
+      avatarHtml = '<div class="reply-avatar' + avatarAdminClass + '" data-avatar="' + escapeHtml((r.User && r.User.profileImage) || "") + '">' + initial + "</div>";
     }
     return (
       '<div class="reply-item">' +
       avatarHtml +
       '<div class="reply-body">' +
-      '<div class="reply-head"><strong' + adminClass + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
+      '<div class="reply-head"><strong' + adminClass + nameAvatarAttr + ">" + username + "</strong>" + tickHtml + " &middot; " + date + "</div>" +
       '<div class="reply-text">' + content + "</div>" +
       "</div>" +
       "</div>"
