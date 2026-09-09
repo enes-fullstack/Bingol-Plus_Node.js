@@ -21,6 +21,7 @@
       <div><strong>Gönderen:</strong> <%= request.User.username %></div>
       <div><strong>Tarih:</strong> <span class="mono"><%= new Date(request.createdAt).toLocaleDateString("tr-TR") %></span></div>
       <div><strong>Maaş:</strong> <%= request.salary || 'Belirtilmemiş' %></div>
+      <div><strong>Telefon:</strong> <% if (request.phone) { %><a href="tel:<%= request.phone.replace(/\s+/g, '') %>"><%= request.phone %></a><% } else { %>Belirtilmemiş<% } %></div>
       <div><strong>Çalışma Şekli:</strong> <%= request.type || 'Belirtilmemiş' %></div>
     </div>
 

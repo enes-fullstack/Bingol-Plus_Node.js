@@ -29,6 +29,7 @@ export interface JobValidationErrors {
     company?: string;
     location?: string;
     salary?: string;
+    phone?: string;
     description?: string;
 }
 
@@ -80,12 +81,23 @@ export const validateForumForm = (body: Record<string, unknown>): ForumValidatio
     return errors;
 };
 
+const PHONE_REGEX_JOB: RegExp = /^[\d\s()+\-]{7,20}$/;
+
+export const validatePhone = (val: unknown): boolean => {
+    if (!val) return true;
+    if (typeof val !== "string") return false;
+    const trimmed = val.trim();
+    if (trimmed === "") return true;
+    return PHONE_REGEX_JOB.test(trimmed);
+};
+
 export const validateJobForm = (body: Record<string, unknown>): JobValidationErrors => {
     const errors: JobValidationErrors = {};
     const title = body.title;
     const company = body.company;
     const location = body.location;
     const salary = body.salary;
+    const phone = body.phone;
     const description = body.description;
 
     if (!validateRequired(title)) errors.title = "\u0130lan ba\u015Fl\u0131\u011F\u0131 zorunludur.";
@@ -100,6 +112,8 @@ export const validateJobForm = (body: Record<string, unknown>): JobValidationErr
     }
 
     if (salary !== undefined && salary !== null && salary !== "" && !validateSalary(salary)) errors.salary = "Maa\u015F bilgisi ge\u00E7ersiz.";
+
+    if (phone !== undefined && phone !== null && phone !== "" && !validatePhone(phone)) errors.phone = "Ge\u00E7erli bir telefon numaras\u0131 giriniz (7-20 karakter).";
 
     return errors;
 };

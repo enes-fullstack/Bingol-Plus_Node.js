@@ -264,6 +264,7 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
     const companyRaw = (req.body as any).company;
     const locationRaw = (req.body as any).location;
     const salaryRaw = (req.body as any).salary;
+    const phoneRaw = (req.body as any).phone;
     const typeRaw = (req.body as any).type;
 
     try {
@@ -273,6 +274,7 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
             company: typeof companyRaw === "string" ? companyRaw.trim() : "",
             location: typeof locationRaw === "string" ? locationRaw.trim() : "",
             salary: typeof salaryRaw === "string" ? salaryRaw.trim() || null : null,
+            phone: typeof phoneRaw === "string" ? phoneRaw.trim() || null : null,
             type: typeof typeRaw === "string" ? typeRaw.trim() || null : null,
             userId: req.session.userId
         });

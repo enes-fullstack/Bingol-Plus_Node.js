@@ -41,6 +41,10 @@
           <input type="text" id="salary" name="salary" value="<%= job.salary || '' %>" placeholder="örn: 25.000 - 35.000 TL">
         </div>
         <div class="form-group">
+          <label for="phone">Telefon Numarası <span style="color:var(--ink-soft);font-weight:400;">(opsiyonel, sadece admin görür)</span></label>
+          <input type="tel" id="phone" name="phone" maxlength="20" value="<%= job.phone || '' %>" placeholder="örn: 0555 123 45 67" autocomplete="tel">
+        </div>
+        <div class="form-group">
           <label for="type">Çalışma Şekli</label>
           <select id="type" name="type">
             <option value="">Seçiniz</option>

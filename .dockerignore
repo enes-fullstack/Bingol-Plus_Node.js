@@ -8,5 +8,4 @@ test
 scripts
 vitest.workspace.ts
 .vscode
-NOTE.md
 TODO.md

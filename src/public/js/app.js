@@ -1749,6 +1749,7 @@
       location: { required: true, label: "Konum zorunludur." },
       description: { required: true, label: "İş açıklaması zorunludur." },
       salary: { salary: true, label: "Maaş bilgisi geçersiz." },
+      phone: { phone: true, label: "Geçerli bir telefon numarası giriniz (7-20 karakter)." },
     };
 
     function getErrorEl(name) { return document.getElementById(name + "-error"); }
@@ -1772,13 +1773,15 @@
         msg = rule.label;
       } else if (rule.salary && val && !/^[\d\s.,\-₺$€₼]{0,50}$/.test(val)) {
         msg = rule.label;
+      } else if (rule.phone && val && !/^[\d\s()+\-]{7,20}$/.test(val)) {
+        msg = rule.label;
       }
 
       setError(name, msg);
       return !msg;
     }
 
-    var fields = ["title", "company", "location", "description", "email", "salary"];
+    var fields = ["title", "company", "location", "description", "email", "salary", "phone"];
     fields.forEach(function (name) {
       var input = form.elements[name];
       if (input) {

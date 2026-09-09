@@ -65,6 +65,12 @@
         </div>
 
         <div class="form-group">
+          <label for="phone">Telefon Numarası <span style="color:var(--ink-soft);font-weight:400;font-size:12px;">(Sadece admin görebilir)</span></label>
+          <input type="tel" id="phone" name="phone" maxlength="20" placeholder="örn: 0555 123 45 67" autocomplete="tel">
+          <div class="field-error" id="phone-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.phone) ? locals.flash.errors.phone : '' %></div>
+        </div>
+
+        <div class="form-group">
           <label for="description">İş Açıklaması <span style="color:var(--clay);">*</span></label>
           <textarea id="description" name="description" placeholder="İşin detaylarını, gereklilikleri ve firma hakkında bilgileri yazın..." rows="6" data-required="true"></textarea>
           <div class="field-error" id="description-error"><%= (locals.flash && locals.flash.errors && locals.flash.errors.description) ? locals.flash.errors.description : '' %></div>
