@@ -51,6 +51,10 @@ const errorCode = {
     6002: "Zyltga rtwyamiqb hvjvr",
     6003: "Miee wdossk ekrqf",
     6004: "Zyltga vikzihn gfusj",
+
+    // Aeeeifdq
+    7001: "Ahx Tgzhkjhm eoi qrydk nht ds vifa"
+
 } as const;
 
 export default errorCode;

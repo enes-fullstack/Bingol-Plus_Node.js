@@ -62,7 +62,7 @@
                 <% if (Number(c.getDataValue('postCount')) > 0) { %>
                   <button class="btn-delete" disabled title="Bu kategoriye ait konular bulunuyor. Önce konuları taşıyın veya silin.">Sil</button>
                 <% } else { %>
-                  <form method="post" action="/admin/kategori-sil/<%= c.id %>" style="display:inline;" onsubmit="return confirm('«<%= c.name %>» kategorisini silmek istediğinize emin misiniz?');">
+                  <form method="post" action="/admin/kategori-sil/<%= c.id %>" style="display:inline;" data-confirm="«<%= c.name %>» kategorisini silmek istediğinize emin misiniz?">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn-delete">Sil</button>
                   </form>

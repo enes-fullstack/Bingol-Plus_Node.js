@@ -105,7 +105,7 @@
                 <td class="hide-mobile"><%= p.User ? p.User.username : '—' %></td>
                 <td class="hide-mobile" style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;"><%= new Date(p.createdAt).toLocaleDateString("tr-TR") %></td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <form method="post" action="/admin/konu-sil/<%= p.id %>" style="display:inline;" onsubmit="return confirm('Bu konuyu silmek istediğinize emin misiniz?');">
+                  <form method="post" action="/admin/konu-sil/<%= p.id %>" style="display:inline;" data-confirm="Bu konuyu silmek istediğinize emin misiniz?">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn-delete">Sil</button>
                   </form>
@@ -172,7 +172,7 @@
                 </td>
                 <td class="hide-mobile" style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;"><%= new Date(r.createdAt).toLocaleDateString("tr-TR") %></td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <form method="post" action="/admin/yanit-sil/<%= r.id %>" style="display:inline;" onsubmit="return confirm('Bu yanıtı silmek istediğinize emin misiniz?');">
+                  <form method="post" action="/admin/yanit-sil/<%= r.id %>" style="display:inline;" data-confirm="Bu yanıtı silmek istediğinize emin misiniz?">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn-delete">Sil</button>
                   </form>

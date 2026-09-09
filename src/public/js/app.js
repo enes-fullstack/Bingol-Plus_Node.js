@@ -5,14 +5,88 @@
   window.__appJsLoaded = true;
 
   /* ── Utilities ── */
-  function showToast(msg) {
+  function showMessage(message, type) {
     var el = document.getElementById("toast");
     if (!el) return;
+    var msg = message === null || message === undefined ? "" : String(message);
+    if (!msg) return;
+    var t = type === null || type === undefined ? "info" : String(type).toLowerCase();
+    if (t !== "success" && t !== "error" && t !== "warning" && t !== "info") t = "info";
     el.textContent = msg;
+    el.classList.remove("toast-success", "toast-error", "toast-warning");
+    if (t !== "info") el.classList.add("toast-" + t);
     el.classList.add("show");
     clearTimeout(el._timer);
-    el._timer = setTimeout(function () { el.classList.remove("show"); }, 2500);
+    var duration = t === "error" ? 3500 : 2500;
+    el._timer = setTimeout(function () { el.classList.remove("show"); }, duration);
   }
+
+  function showToast(msg) {
+    showMessage(msg, "info");
+  }
+
+  /* ── Confirm modal (replaces native confirm()) ── */
+  var confirmOverlay = null;
+  var confirmMessageEl = null;
+  var confirmOkBtn = null;
+  var confirmCancelBtn = null;
+  var confirmPending = null;
+  var confirmLastFocus = null;
+
+  function ensureConfirmEls() {
+    if (confirmOverlay) return true;
+    confirmOverlay = document.getElementById("confirm-overlay");
+    confirmMessageEl = document.getElementById("confirm-message");
+    confirmOkBtn = document.getElementById("confirm-ok");
+    confirmCancelBtn = document.getElementById("confirm-cancel");
+    if (!confirmOverlay || !confirmMessageEl || !confirmOkBtn || !confirmCancelBtn) return false;
+    confirmOkBtn.addEventListener("click", function () {
+      var cb = confirmPending;
+      hideConfirm();
+      if (typeof cb === "function") cb();
+    });
+    confirmCancelBtn.addEventListener("click", function () { hideConfirm(); });
+    confirmOverlay.addEventListener("click", function (e) {
+      if (e.target === confirmOverlay) hideConfirm();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && confirmOverlay && confirmOverlay.style.display !== "none") hideConfirm();
+    });
+    return true;
+  }
+
+  function showConfirm(message, onConfirm, options) {
+    if (!ensureConfirmEls()) {
+      if (typeof onConfirm === "function") onConfirm();
+      return;
+    }
+    var msg = message === null || message === undefined ? "" : String(message);
+    if (!msg) msg = "Emin misiniz?";
+    confirmMessageEl.textContent = msg;
+    var opts = options || {};
+    confirmOkBtn.textContent = opts.okText || "Sil";
+    confirmCancelBtn.textContent = opts.cancelText || "Vazgeç";
+    confirmPending = (typeof onConfirm === "function") ? onConfirm : null;
+    try { confirmLastFocus = document.activeElement; } catch (e) { confirmLastFocus = null; }
+    confirmOverlay.style.display = "flex";
+    confirmOverlay.setAttribute("aria-hidden", "false");
+    try { confirmCancelBtn.focus(); } catch (e) {}
+  }
+
+  function hideConfirm() {
+    if (!confirmOverlay) return;
+    confirmOverlay.style.display = "none";
+    confirmOverlay.setAttribute("aria-hidden", "true");
+    confirmPending = null;
+    if (confirmLastFocus && typeof confirmLastFocus.focus === "function") {
+      try { confirmLastFocus.focus(); } catch (e) {}
+    }
+    confirmLastFocus = null;
+  }
+
+  window.showMessage = showMessage;
+  window.showToast = showToast;
+  window.showConfirm = showConfirm;
 
   function escapeHtml(str) {
     var d = document.createElement("div");
@@ -775,7 +849,7 @@
 
     likeBtn.addEventListener("click", async function () {
       if (document.body.dataset.userLoggedIn !== "true") {
-        alert("Giriş yapmalısınız.");
+        showMessage("Giriş yapmalısınız.", "warning");
         return;
       }
 
@@ -799,10 +873,10 @@
           }
           document.getElementById("likeCount").textContent = data.likes;
         } else {
-          alert(data.error || "Bir hata oluştu");
+          showMessage(data.error || "Bir hata oluştu", "error");
         }
       } catch (err) {
-        alert("Bağlantı hatası");
+        showMessage("Bağlantı hatası", "error");
       }
     });
   })();
@@ -825,7 +899,7 @@
 
     replySubmit.addEventListener("click", async function () {
       if (document.body.dataset.userLoggedIn !== "true") {
-        alert("Giriş yapmalısınız.");
+        showMessage("Giriş yapmalısınız.", "warning");
         return;
       }
 
@@ -833,7 +907,7 @@
       var content = document.getElementById("replyContent").value.trim();
 
       if (!content) {
-        alert("Yanıt boş olamaz.");
+        showMessage("Yanıt boş olamaz.", "warning");
         return;
       }
 
@@ -868,10 +942,10 @@
           var count = match ? parseInt(match[1]) + 1 : 1;
           label.textContent = "Yanıtlar (" + count + ")";
         } else {
-          alert(data.error || "Bir hata oluştu");
+          showMessage(data.error || "Bir hata oluştu", "error");
         }
       } catch (err) {
-        alert("Bağlantı hatası");
+        showMessage("Bağlantı hatası", "error");
       }
     });
 
@@ -931,7 +1005,7 @@
           }
         }
       } catch (err) {
-        alert("Bağlantı hatası");
+        showMessage("Bağlantı hatası", "error");
       }
     });
   })();
@@ -975,7 +1049,7 @@
     if (!btn) return;
 
     if (document.body.dataset.userLoggedIn !== "true") {
-      alert("Giriş yapmalısınız.");
+      showMessage("Giriş yapmalısınız.", "warning");
       return;
     }
 
@@ -994,10 +1068,10 @@
           icon.setAttribute("fill", data.liked ? "var(--lake-deep)" : "none");
           count.textContent = data.likes;
         } else {
-          alert(data.error || "Hata");
+          showMessage(data.error || "Hata", "error");
         }
       })
-      .catch(function () { alert("Bağlantı hatası"); });
+      .catch(function () { showMessage("Bağlantı hatası", "error"); });
   });
 
   /* ── Forum Feed / Detail: Reply Toggle (event delegation) ── */
@@ -1017,7 +1091,7 @@
     if (!btn) return;
 
     if (document.body.dataset.userLoggedIn !== "true") {
-      alert("Giriş yapmalısınız.");
+      showMessage("Giriş yapmalısınız.", "warning");
       return;
     }
 
@@ -1026,7 +1100,7 @@
     var content = textarea.value.trim();
 
     if (!content) {
-      alert("Yanıt boş olamaz.");
+      showMessage("Yanıt boş olamaz.", "warning");
       return;
     }
 
@@ -1071,10 +1145,10 @@
           }
         }
       } else {
-        alert(data.error || "Bir hata oluştu");
+        showMessage(data.error || "Bir hata oluştu", "error");
       }
     } catch (err) {
-      alert("Bağlantı hatası");
+      showMessage("Bağlantı hatası", "error");
     }
   });
 
@@ -1138,7 +1212,7 @@
         }
       }
     } catch (err) {
-      alert("Bağlantı hatası");
+      showMessage("Bağlantı hatası", "error");
     }
   });
 
@@ -1372,16 +1446,17 @@
     var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
 
     function deletePost(postId) {
-      if (!confirm("Bu konuyu silmek istediğinize emin misiniz?")) return;
-      fetch("/admin/konu-sil/" + postId, {
-        method: "POST",
-        headers: { "csrf-token": csrfToken },
-      })
-        .then(function (res) {
-          if (res.ok || res.redirected) location.reload();
-          else alert("Silme işlemi başarısız");
+      showConfirm("Bu konuyu silmek istediğinize emin misiniz?", function () {
+        fetch("/admin/konu-sil/" + postId, {
+          method: "POST",
+          headers: { "csrf-token": csrfToken },
         })
-        .catch(function () { alert("Bağlantı hatası"); });
+          .then(function (res) {
+            if (res.ok || res.redirected) location.reload();
+            else showMessage("Silme işlemi başarısız", "error");
+          })
+          .catch(function () { showMessage("Bağlantı hatası", "error"); });
+      });
     }
 
     topicList.addEventListener("click", function (e) {
@@ -1565,6 +1640,15 @@
     confirm.addEventListener("input", checkMatch);
   })();
 
+  /* ── Confirm forms via data-confirm (replaces onsubmit="return confirm()") ── */
+  document.addEventListener("submit", function (e) {
+    var form = e.target;
+    if (!form || !form.hasAttribute || !form.hasAttribute("data-confirm")) return;
+    e.preventDefault();
+    var msg = form.getAttribute("data-confirm") || "Emin misiniz?";
+    showConfirm(msg, function () { form.submit(); });
+  });
+
   /* ── Admin Users: Delete Confirmation ── */
   (function () {
     var table = document.querySelector(".user-table");
@@ -1575,10 +1659,11 @@
       if (!btn) return;
       var form = btn.closest("form");
       if (!form) return;
+      e.preventDefault();
       var username = form.dataset.username || "bu kullanıcıyı";
-      if (!confirm(username + " kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) {
-        e.preventDefault();
-      }
+      showConfirm(username + " kullanıcısını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.", function () {
+        form.submit();
+      });
     });
   })();
 
@@ -1590,10 +1675,13 @@
     list.addEventListener("click", function (e) {
       var btn = e.target.closest(".job-delete-form");
       if (!btn) return;
+      var form = btn.tagName === "FORM" ? btn : btn.closest("form");
+      if (!form) return;
+      e.preventDefault();
       var title = (btn.closest(".job-card").querySelector(".job-info strong") || {}).textContent || "Bu ilanı";
-      if (!confirm('"' + title + '" ilanını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
-        e.preventDefault();
-      }
+      showConfirm('"' + title + '" ilanını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', function () {
+        form.submit();
+      });
     });
   })();
 
@@ -1606,10 +1694,12 @@
       var btn = e.target.closest(".job-delete-form");
       if (!btn) return;
       var form = btn.closest("form");
+      if (!form) return;
+      e.preventDefault();
       var title = (form && form.dataset.title) || "Bu ilanı";
-      if (!confirm('"' + title + '" ilanını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
-        e.preventDefault();
-      }
+      showConfirm('"' + title + '" ilanını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.', function () {
+        form.submit();
+      });
     });
   })();
 

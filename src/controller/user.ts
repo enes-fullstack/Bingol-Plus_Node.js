@@ -19,6 +19,7 @@ import { validateToken } from "../middleware/csrf.js";
 import { optimizeUrl, uploadImageFromBuffer, deleteImage, extractPublicId } from "../cloud/upload.js";
 import { slugify } from "../helpers/slug.js";
 import { error } from "../log/logger.js";
+import { sendTelegramLog } from "../log/telegramBot.js";
 import { normalizeError } from "../helpers/normalizeError.js";
 
 const sortRepliesAdminFirst = <T extends { User?: { role?: string } | null; createdAt: any }>(replies: T[]): T[] => {
@@ -275,6 +276,9 @@ export const ilan_ekle_post = async (req: Request, res: Response): Promise<void>
             type: typeof typeRaw === "string" ? typeRaw.trim() || null : null,
             userId: req.session.userId
         });
+
+        // Fire-and-forget: Telegram başarısızlığı talebin başarısını etkilemez.
+        sendTelegramLog("✅ YENİ BİR İŞ İLANI TALEBİ OLUŞTU.").catch(() => {console.log("Error Code:", 7001)});
 
         req.session.flash = { type: "success", message: "İlan talebiniz alındı. Admin onayından sonra yayınlanacaktır." };
         res.redirect("/ilanlar");

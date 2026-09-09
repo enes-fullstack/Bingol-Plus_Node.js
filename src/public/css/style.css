@@ -754,6 +754,72 @@ section { padding: 56px 0; }
   transform: translateX(-50%) translateY(0);
 }
 
+.toast-success { background: #2e7d32; color: #fff; }
+.toast-error { background: #c62828; color: #fff; }
+.toast-warning { background: #b7791f; color: #fff; }
+
+/* ---------- CONFIRM MODAL ---------- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(0, 0, 0, 0.5);
+  animation: confirmFade 0.18s ease-out;
+}
+.confirm-modal {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  border: 1px solid var(--stone-line);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+  animation: confirmIn 0.2s ease-out;
+}
+.confirm-message {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.confirm-danger {
+  background: #c0392b;
+  border-color: #c0392b;
+  color: #fff;
+}
+.confirm-danger:hover { background: #a93226; border-color: #a93226; }
+@keyframes confirmFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes confirmIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+html[data-theme="dark"] .confirm-modal { background: #1E2320; border-color: var(--stone-line); }
+html[data-theme="dark"] .confirm-message { color: var(--ink); }
+html[data-theme="dark"] .confirm-overlay { background: rgba(0, 0, 0, 0.65); }
+html[data-theme="dark"] .toast-success { background: #2e7d32; color: #fff; border: none; }
+html[data-theme="dark"] .toast-error { background: #c62828; color: #fff; border: none; }
+html[data-theme="dark"] .toast-warning { background: #b7791f; color: #fff; border: none; }
+@media (max-width: 480px) {
+  .confirm-modal { padding: 16px; max-width: 94vw; }
+  .confirm-actions .btn { flex: 1; justify-content: center; }
+}
+
 /* ---------- FOOTER ---------- */
 footer {
   border-top: 1px solid var(--stone-line);

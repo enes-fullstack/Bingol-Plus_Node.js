@@ -59,7 +59,7 @@
                 <span>Yanıtlar<%= (typeof replyCounts !== 'undefined' && replyCounts[post.id]) ? ' (' + replyCounts[post.id] + ')' : '' %></span>
               </button>
               <a href="/forum/konu/<%= post.id %>/<%= slugify(post.title) %>" class="action-btn" style="margin-left:auto;text-decoration:none;font-size:13px;">Görüntüle</a>
-              <form method="POST" action="/profilim/post-sil/<%= post.id %>" style="display:inline;" onsubmit="return confirm('Silmek istediğinize emin misiniz?');">
+              <form method="POST" action="/profilim/post-sil/<%= post.id %>" style="display:inline;" data-confirm="Silmek istediğinize emin misiniz?">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="action-btn delete-btn">Sil</button>
               </form>

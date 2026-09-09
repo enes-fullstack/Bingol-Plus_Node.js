@@ -26,6 +26,10 @@ interface Config {
         apiKey: string;
         apiSecret: string;
         folder: string;
+    },
+    telegram: {
+        bot_token: string,
+        chat_id: string
     }
 };
 
@@ -49,6 +53,10 @@ const config: Config = {
         apiKey: process.env.CLOUDINARY_API_KEY!,
         apiSecret: process.env.CLOUDINARY_API_SECRET!,
         folder: process.env.CLOUDINARY_FOLDER!
+    },
+    telegram: {
+        bot_token: process.env.TG_BOT_TOKEN!,
+        chat_id: process.env.TG_CHAT_ID!
     }
 };
 

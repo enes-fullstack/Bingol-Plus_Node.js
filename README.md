@@ -87,11 +87,15 @@ GMAIL / GMAIL_APP_PASSWORD
 # CLOUDINARY
 CLOUDINARY_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET / CLOUDINARY_FOLDER
 
+# SEO
+SITE_URL=https://bingolplus.com
+
 # ACCOUNT (seed)
 ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL / USER_PASSWORD
 
-# SEO
-SITE_URL=https://bingolplus.com
+# TELEGRAM (Log)
+TG_BOT_TOKEN / TG_CHAT_ID
+
 ```
 
 `src/config/config.ts` ve `config/config.cjs` `NODE_ENV`'a göre doğru dosyayı yükler.
