@@ -14,8 +14,9 @@ import forum from "./routers/forum.js";
 import admin from "./routers/admin.js";
 import { csrfMiddleware } from "./middleware/csrf.js";
 import loadUser from "./middleware/loadUser.js";
-import { error } from "./log/logger.js";
+import { error, critical } from "./log/logger.js";
 import { normalizeError } from "./helpers/normalizeError.js";
+import { sendServerErrorLog } from "./log/telegramBot.js";
 import helmetConfig from "./security/helmet.js";
 import sitemapRouter from "./routers/sitemap.js";
 import { slugify } from "./helpers/slug.js";
@@ -113,6 +114,38 @@ app.use(sitemapRouter);
 app.use((req, res) => {
     res.locals.robots = "noindex, nofollow";
     res.status(404).render("user/error");
+});
+
+// 500 — global error handler (yalnızca yakalanamayan hatalar buraya düşer;
+// controller'ların kendi yakaladığı validation/redirect akışları etkilenmez)
+function errorStatusOf(err: unknown): number | undefined {
+    if (typeof err === "object" && err !== null) {
+        for (const key of ["status", "statusCode"] as const) {
+            if (key in err) {
+                const v = (err as Record<string, unknown>)[key];
+                if (typeof v === "number" && Number.isInteger(v) && v >= 400 && v < 600) return v;
+            }
+        }
+    }
+    return undefined;
+}
+
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // Express default handler gibi davran: önceden set edilmiş hata statüsü korunur.
+    const status = res.statusCode >= 400 ? res.statusCode : (errorStatusOf(err) ?? 500);
+    if (status === 500) {
+        critical(`Express 500 [${req.method} ${req.path}]: ${normalizeError(err)}`);
+        // Fire-and-forget: response'u bekletmez, aynı hata 5 dk'da 1 kez bildirilir.
+        sendServerErrorLog(req.method, req.path, err).catch(() => {});
+    } else {
+        error(`Express ${status} [${req.method} ${req.path}]: ${normalizeError(err)}`);
+    }
+    if (res.headersSent) {
+        next(err);
+        return;
+    }
+    res.locals.robots = "noindex, nofollow";
+    res.status(status).render("user/error", { statusCode: status });
 });
 
 export default app;

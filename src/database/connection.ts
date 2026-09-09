@@ -18,6 +18,9 @@ const connection = async (): Promise<void> => {
     } catch (err) {
         console.log("Error Code:", 1002);
         import("../log/logger.js").then(m => m.error(`Database connection failed: ${normalizeError(err)}`));
+        // Startup akışının (server.ts) hatayı görüp Telegram bildirimi
+        // gönderebilmesi için hatayı yutma, yukarı fırlat.
+        throw err;
     };
 };
 

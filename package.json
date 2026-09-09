@@ -2,7 +2,7 @@
   "name": "bingol-plus",
   "version": "1.0.0",
   "description": "Bingöl Plus Web Sitesi",
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test vitest run --no-file-parallelism",
     "test:coverage": "cross-env NODE_ENV=test vitest run --coverage --no-file-parallelism",
