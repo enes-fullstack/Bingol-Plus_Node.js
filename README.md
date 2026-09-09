@@ -268,7 +268,7 @@ SALARY_REGEX   = /^[\d\s.,\-₺$€₼]{0,50}$/
 | `post_likes` | `userId` FK + `postId` FK |
 | `post_replies` | `postId` FK, `userId` FK, `content` (TEXT) |
 | `password_resets` | `userId` FK, `token` (UNIQUE, sha256 64 hex), `expiresAt` (1h), `usedAt?` |
-| `job_requests` | `userId` FK + tüm job alanları + `status` (pending/approved/rejected) |
+| `job_requests` | `userId` FK + tüm job alanları (`title`/`description`/`company`/`location`/`salary`/`phone`/`type`) + `status` (pending/approved/rejected) |
 | `job_applications` | `jobId` FK + `userId` FK + `ad`, `soyad`, `telefon`, `email`, `ilIlce`, `yas`, `medeniDurumu`, `ogrenimDurumu`, `surucuBelgesi`, `yabanciDil`, `ekNotlar`, `status` (inceleniyor/kabul_edildi/reddedildi), unique (jobId, userId) |
 | `saved_jobs` | `userId` FK + `jobId` FK (unique composite) |
 | `saved_posts` | `userId` FK + `postId` FK |
@@ -310,6 +310,7 @@ SALARY_REGEX   = /^[\d\s.,\-₺$€₼]{0,50}$/
 - `normalizeError` (`src/helpers/normalizeError.ts`) — sensitive redact, circular Buffer safe, `formatErrorInstance`
 - Her seviye `Log.create({ type, message })` → DB + console (timestamp `YYYY-MM-DD HH:mm:ss` + `[TYPE]`)
 - Admin `Log` filtreleme/silme (`logsGet`, `logDeletePost`, `logsDeleteAllPost`)
+- Telegram bildirimi (`src/log/telegramBot.ts`) — crash/startup/server hataları `TG_BOT_TOKEN` / `TG_CHAT_ID` ile Telegram'a iletilir (5dk dedupe, secret redact, asla throw etmez)
 
 ---
 
