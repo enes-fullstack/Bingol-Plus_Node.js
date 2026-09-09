@@ -22,17 +22,6 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                email: "kodlamavakti1@gmail.com",
-                username: "user",
-                password: hashedPassword,
-                role: "user",
-                banned: false,
-                ip: "127.0.0.1",
-                userAgent: "Seeder",
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
                 email: "faruk@gmail.com",
                 username: "Faruk",
                 password: hashedPassword,
@@ -303,6 +292,17 @@ module.exports = {
             {
                 email: "muratnehir@gmail.com",
                 username: "MuratNehir",
+                password: hashedPassword,
+                role: "user",
+                banned: false,
+                ip: "127.0.0.1",
+                userAgent: "Seeder",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                email: "kodlamavakti1@gmail.com",
+                username: "user",
                 password: hashedPassword,
                 role: "user",
                 banned: false,

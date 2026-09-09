@@ -103,6 +103,51 @@
     return cleanUrl.replace("/upload/", "/upload/w_800,h_800,c_fill,f_auto,q_auto/");
   }
 
+  /* ── Broken avatar fallback ──
+     DB'de profileImage kayıtlıyken Cloudinary'deki görsel silinmişse (404),
+     kırık ikon yerine username baş harfi fallback'i göster. CSP nedeniyle
+     inline onerror kullanılamaz, bu yüzden capture-phase global listener var.
+     Template'ler img'nin yanına gizli `.avatar-fallback` sibling render eder. */
+  var AVATAR_IMG_SELECTOR = ".avatar-img,.feed-avatar,.reply-avatar-img,.topic-avatar-img,.topic-author-avatar,.user-avatar-sm";
+
+  function handleBrokenAvatarImg(img) {
+    if (!img || img.dataset.avatarFallbackDone) return;
+    img.dataset.avatarFallbackDone = "1";
+    var parent = img.parentElement;
+    var fallback = parent ? parent.querySelector(".avatar-fallback") : null;
+    if (fallback) {
+      img.style.display = "none";
+      fallback.style.display = "";
+    } else if (parent && (parent.classList.contains("reply-avatar") || parent.classList.contains("topic-avatar"))) {
+      // Nested durum (img fallback stilli container içinde): container'ı fallback'e çevir
+      var initial = img.getAttribute("data-fallback-initial") || "?";
+      img.remove();
+      parent.setAttribute("data-avatar", "");
+      if (!parent.textContent.trim()) parent.textContent = initial;
+    } else {
+      img.style.display = "none";
+    }
+    // Kırık görselin popup'ı tetiklememesi için aynı kapsamdaki data-avatar'ları temizle
+    try {
+      img.removeAttribute("data-avatar");
+      var scope = img.closest(".post-author,.topic-author,.reply-item,.post-card,.topic,.avatar-wrap,.user-avatar-click") || parent;
+      if (scope && scope.querySelectorAll) {
+        var holders = scope.querySelectorAll("[data-avatar]");
+        for (var i = 0; i < holders.length; i++) holders[i].setAttribute("data-avatar", "");
+      }
+      var closestHolder = img.closest("[data-avatar]");
+      if (closestHolder) closestHolder.setAttribute("data-avatar", "");
+    } catch (e) {}
+  }
+
+  document.addEventListener("error", function (e) {
+    var t = e.target;
+    if (!t || t.tagName !== "IMG") return;
+    if (t.id === "avatar-popup-img" || t.id === "crop-image") return;
+    if (!t.matches || !t.matches(AVATAR_IMG_SELECTOR)) return;
+    handleBrokenAvatarImg(t);
+  }, true);
+
   /* ── Theme (Dark / Light) ── */
   (function () {
     var STORAGE_KEY = "theme";
@@ -204,9 +249,15 @@
       if (!url) return;
       var largeUrl = getLargeUrl(url);
       if (!largeUrl) return;
-      popupImg.src = largeUrl;
-      overlay.style.display = "block";
-      popup.style.display = "flex";
+      // Kırık (Cloudinary'den silinmiş) görselde popup açma, yokmuş gibi davran
+      var pre = new Image();
+      pre.onload = function () {
+        popupImg.src = largeUrl;
+        overlay.style.display = "block";
+        popup.style.display = "flex";
+      };
+      pre.onerror = function () {};
+      pre.src = largeUrl;
     }
 
     function closePopup() {
@@ -214,6 +265,8 @@
       popup.style.display = "none";
       popupImg.src = "";
     }
+
+    popupImg.addEventListener("error", closePopup);
 
     overlay.addEventListener("click", closePopup);
     popup.addEventListener("click", function (e) {
@@ -961,7 +1014,8 @@
       var avatarAttr = 'data-avatar=""';
       if (r.User.profileImage) {
         var src = r.User.avatarUrl || "";
-        avatarHtml = '<img src="' + escapeHtml(src) + '" alt="" class="reply-avatar-img" style="width:34px;height:34px;" loading="lazy">';
+        var initial0 = escapeHtml(r.User.username.charAt(0).toUpperCase());
+        avatarHtml = '<img src="' + escapeHtml(src) + '" alt="" class="reply-avatar-img" style="width:34px;height:34px;" loading="lazy" data-fallback-initial="' + initial0 + '">';
         avatarAttr = 'data-avatar="' + escapeHtml(r.User.profileImage) + '"';
       } else {
         var initial = escapeHtml(r.User.username.charAt(0).toUpperCase());
@@ -1162,11 +1216,12 @@
     var tickHtml = isAdmin ? '<span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>' : "";
     var avatarHtml;
     var nameAvatarAttr = r.User && r.User.profileImage ? ' data-avatar="' + escapeHtml(r.User.profileImage) + '"' : ' data-avatar=""';
+    var initial = escapeHtml(r.User ? r.User.username.charAt(0).toUpperCase() : "?");
     if (r.User && r.User.avatarUrl) {
       var profileImage = r.User.profileImage || "";
-      avatarHtml = '<img src="' + escapeHtml(r.User.avatarUrl) + '" alt="" class="reply-avatar-img" loading="lazy" data-avatar="' + escapeHtml(profileImage) + '">';
+      avatarHtml = '<img src="' + escapeHtml(r.User.avatarUrl) + '" alt="" class="reply-avatar-img" loading="lazy" data-avatar="' + escapeHtml(profileImage) + '">' +
+        '<div class="reply-avatar' + avatarAdminClass + ' avatar-fallback" style="display:none" aria-hidden="true" data-avatar="' + escapeHtml(profileImage) + '">' + initial + "</div>";
     } else {
-      var initial = escapeHtml(r.User ? r.User.username.charAt(0).toUpperCase() : "?");
       avatarHtml = '<div class="reply-avatar' + avatarAdminClass + '" data-avatar="' + escapeHtml((r.User && r.User.profileImage) || "") + '">' + initial + "</div>";
     }
     return (
@@ -1234,7 +1289,8 @@
       var isPostAdmin = post.User && post.User.role === "admin";
       var avatarHtml;
       if (post.User && post.User.avatarUrl) {
-        avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="feed-avatar" loading="lazy">';
+        avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="feed-avatar" loading="lazy">' +
+          '<span class="feed-avatar-letter' + (isPostAdmin ? ' admin-avatar' : '') + ' avatar-fallback" style="display:none" aria-hidden="true">' + escapeHtml(initial) + "</span>";
       } else {
         avatarHtml = '<span class="feed-avatar-letter' + (isPostAdmin ? ' admin-avatar' : '') + '">' + initial + "</span>";
       }
@@ -1492,7 +1548,7 @@
             var isTopicAdmin = post.User && post.User.role === "admin";
             var avatarHtml;
             if (post.User && post.User.avatarUrl) {
-              avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="topic-avatar-img" loading="lazy">';
+              avatarHtml = '<img src="' + escapeHtml(post.User.avatarUrl) + '" alt="" class="topic-avatar-img" loading="lazy" data-fallback-initial="' + escapeHtml(initial) + '">';
             } else {
               avatarHtml = initial;
             }
@@ -1502,7 +1558,8 @@
               var avatarSrc = escapeHtml(post.User.avatarUrl || "");
               var avatarInner;
               if (post.User.avatarUrl) {
-                avatarInner = '<img src="' + avatarSrc + '" alt="" class="topic-author-avatar" loading="lazy">';
+                avatarInner = '<img src="' + avatarSrc + '" alt="" class="topic-author-avatar" loading="lazy">' +
+                  '<span class="topic-author-letter' + (isTopicAdmin ? ' admin-avatar' : '') + ' avatar-fallback" style="display:none" aria-hidden="true">' + escapeHtml(initial) + "</span>";
               } else {
                 avatarInner = '<span class="topic-author-letter' + (isTopicAdmin ? ' admin-avatar' : '') + '">' + initial + "</span>";
               }
@@ -1715,10 +1772,21 @@
       if (avatar && avatar.dataset.avatar) {
         var largeUrl = getLargeUrl(avatar.dataset.avatar);
         if (!largeUrl) return;
-        popupImg.src = largeUrl;
-        overlay.style.display = "block";
-        popup.style.display = "flex";
+        // Kırık (Cloudinary'den silinmiş) görselde popup açma, yokmuş gibi davran
+        var pre = new Image();
+        pre.onload = function () {
+          popupImg.src = largeUrl;
+          overlay.style.display = "block";
+          popup.style.display = "flex";
+        };
+        pre.onerror = function () {};
+        pre.src = largeUrl;
       }
+    });
+    popupImg.addEventListener("error", function () {
+      overlay.style.display = "none";
+      popup.style.display = "none";
+      popupImg.src = "";
     });
   })();
 

@@ -74,6 +74,7 @@
                 <% if (u.profileImage) { %>
                   <span class="user-avatar-click" data-avatar="<%= u.profileImage %>" style="cursor:pointer;">
                     <img src="<%= u.profileImage.replace('/upload/','/upload/w_36,h_36,c_fill/') %>" alt="" class="user-avatar-sm" loading="lazy">
+                    <span class="user-initial avatar-fallback" style="display:none" aria-hidden="true"><%= u.username.charAt(0).toUpperCase() %></span>
                   </span>
                 <% } else { %>
                   <span class="user-initial"><%= u.username.charAt(0).toUpperCase() %></span>

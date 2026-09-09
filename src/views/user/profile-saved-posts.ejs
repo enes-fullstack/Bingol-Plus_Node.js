@@ -47,6 +47,7 @@
                 <% var pa = (typeof avatarMap !== 'undefined' && avatarMap[post.User.id]) ? avatarMap[post.User.id] : null; %>
                 <% if (pa) { %>
                   <img src="<%= pa %>" alt="" class="feed-avatar" loading="lazy">
+                  <span class="feed-avatar-letter <%= post.User.role === 'admin' ? 'admin-avatar' : '' %> avatar-fallback" style="display:none" aria-hidden="true"><%= post.User.username.charAt(0).toUpperCase() %></span>
                 <% } else { %>
                   <span class="feed-avatar-letter <%= post.User.role === 'admin' ? 'admin-avatar' : '' %>"><%= post.User.username.charAt(0).toUpperCase() %></span>
                 <% } %>
@@ -93,6 +94,7 @@
                       <% var ra = (typeof avatarMap !== 'undefined') ? avatarMap[reply.User.id] : null; %>
                       <% if (ra) { %>
                         <img src="<%= ra %>" alt="" class="reply-avatar-img" loading="lazy" data-avatar="<%= reply.User.profileImage || '' %>">
+                        <div class="reply-avatar <%= reply.User.role === 'admin' ? 'admin-avatar' : '' %> avatar-fallback" style="display:none" aria-hidden="true" data-avatar="<%= reply.User.profileImage || '' %>"><%= reply.User.username.charAt(0).toUpperCase() %></div>
                       <% } else { %>
                         <div class="reply-avatar <%= reply.User.role === 'admin' ? 'admin-avatar' : '' %>" data-avatar="<%= reply.User.profileImage || '' %>"><%= reply.User.username.charAt(0).toUpperCase() %></div>
                       <% } %>

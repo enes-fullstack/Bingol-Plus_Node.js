@@ -26,6 +26,7 @@
         <% if (user.profileImage) { %>
           <span class="avatar-wrap" data-avatar="<%= user.profileImage %>">
             <img src="<%= user.profileImage.replace('/upload/', '/upload/w_64,h_64,c_fill,f_auto,q_auto/') %>" alt="" class="avatar-img" loading="lazy">
+            <div class="avatar-big <%= user.role === 'admin' ? 'admin-avatar' : '' %> avatar-fallback" style="display:none" aria-hidden="true"><%= user.username.charAt(0).toUpperCase() %></div>
           </span>
         <% } else { %>
           <div class="avatar-big <%= user.role === 'admin' ? 'admin-avatar' : '' %>"><%= user.username.charAt(0).toUpperCase() %></div>
