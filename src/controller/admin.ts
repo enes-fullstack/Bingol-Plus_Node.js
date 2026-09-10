@@ -362,13 +362,38 @@ export const usersGet = async (req: Request, res: Response): Promise<void> => {
     const offset = (page - 1) * limit;
 
     const search = typeof req.query.q === "string" ? req.query.q.trim() : "";
-    const where: Record<string, unknown> = {};
+    const rawStatus = typeof req.query.status === "string" ? req.query.status.trim() : "all";
+    const status = rawStatus === "active" || rawStatus === "banned" || rawStatus === "deleted" ? rawStatus : "all";
+
+    const statusWhere: Record<string, unknown> = {};
+    if (status === "active") {
+        statusWhere["banned"] = false;
+        statusWhere["deletedAt"] = null;
+    } else if (status === "banned") {
+        statusWhere["banned"] = true;
+        statusWhere["deletedAt"] = null;
+    } else if (status === "deleted") {
+        (statusWhere as Record<string, unknown>)["deletedAt"] = { [Op.not]: null };
+    }
+
+    const searchWhere: Record<string, unknown> = {};
     if (search) {
         const escaped = search.replace(/[\\%_]/g, "\\$&");
-        where[Op.or as unknown as string] = [
+        searchWhere[Op.or as unknown as string] = [
             { username: { [Op.like]: `%${escaped}%` } },
             { email: { [Op.like]: `%${escaped}%` } }
         ];
+    }
+
+    const where: Record<string, unknown> = {};
+    const hasStatus = Object.keys(statusWhere).length > 0;
+    const hasSearch = Object.keys(searchWhere).length > 0;
+    if (hasStatus && hasSearch) {
+        where[Op.and as unknown as string] = [statusWhere, searchWhere];
+    } else if (hasStatus) {
+        Object.assign(where, statusWhere);
+    } else if (hasSearch) {
+        Object.assign(where, searchWhere);
     }
 
     const { count, rows: users } = await User.findAndCountAll({
@@ -409,6 +434,7 @@ export const usersGet = async (req: Request, res: Response): Promise<void> => {
         statsBanned,
         statsDeleted,
         search,
+        status,
         username,
         userId: req.session.userId || null
     });
