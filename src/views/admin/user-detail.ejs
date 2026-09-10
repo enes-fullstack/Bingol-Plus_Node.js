@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <%- include('../partials/head', { title: 'Kullanıcı Düzenle - Admin | Bingöl Plus', description: 'Bingöl Plus admin paneli — kullanıcı düzenleme.' }) %>
+  <title>Kullanıcı Düzenle - Admin | Bingöl Plus</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="/css/auth.css">
+  <style>
+  .detail-avatar { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .detail-avatar img { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: var(--lake); }
+  .detail-avatar-fallback { display: inline-flex; width: 72px; height: 72px; border-radius: 50%; background: var(--lake); color: #fff; font-size: 28px; font-weight: 600; align-items: center; justify-content: center; flex: none; }
+  .detail-avatar-fallback-admin { background: #9333ea; box-shadow: 0 0 12px #a855f7, 0 0 28px rgba(168,85,247,.55); }
+  .detail-avatar-info { display: flex; flex-direction: column; gap: 2px; }
+  .detail-avatar-info strong { font-size: 16px; }
+  .detail-avatar-info span { font-size: 12px; color: var(--ink-soft); }
+  .form-group input[readonly] { background: var(--paper-raised); color: var(--ink-soft); cursor: not-allowed; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 14px; }
+  .check-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--clay); cursor: pointer; }
+  .badge-banned { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; background: #f8d7da; color: #721c24; }
+  .badge-deleted { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; background: #e2e3e5; color: #383d41; }
+  .role-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; }
+  .role-dot-user { background: #2563eb; }
+  .manage-section { margin-top: 28px; }
+  .manage-section h2 { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .manage-section .section-sub { font-size: 13px; color: var(--ink-soft); margin: 0 0 12px; }
+  .job-info span { font-size: 12px; color: var(--ink-soft); }
+  .job-info strong a { color: var(--ink); text-decoration: none; }
+  .job-info strong a:hover { color: var(--lake-deep); text-decoration: underline; }
+  .empty-manage { text-align: center; padding: 24px 0; color: var(--ink-soft); font-size: 14px; background: #fff; border: 1px solid var(--stone-line); border-radius: var(--radius); }
+  .avatar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 999; }
+  .avatar-popup { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+  .avatar-popup-inner { background: #fff; border-radius: 50%; padding: 4px; box-shadow: 0 16px 48px rgba(0,0,0,0.38); width: min(88vmin, 640px); height: min(88vmin, 640px); max-width: 90vw; max-height: 90vh; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; box-sizing: border-box; overflow: hidden; }
+  .avatar-popup-inner img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .btn-delete { padding: 4px 12px; border: 1px solid #e74c3c; border-radius: 4px; background: #fff; color: #e74c3c; font-size: 12px; font-weight: 500; cursor: pointer; transition: .15s; }
+  .btn-delete:hover { background: #e74c3c; color: #fff; }
+  html[data-theme="dark"] .manage-section .job-card { background: #1E2320; border-color: var(--stone-line); }
+  html[data-theme="dark"] .empty-manage { background: #1E2320; border-color: var(--stone-line); }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/navbar', { currentPage: 'admin' }) %>
+
+  <div class="admin-wrap wrap">
+    <%- include('../partials/flash') %>
+    <a href="/admin/kullanicilar" class="top-link">← Kullanıcılara Dön</a>
+
+    <div class="form-card" style="max-width:640px;">
+      <h1>Kullanıcı Bilgileri</h1>
+      <p class="form-sub">ID: <%= targetUser.id %></p>
+
+      <div class="detail-avatar">
+        <% if (targetUser.profileImage) { %>
+          <img src="<%= targetUser.profileImage.replace('/upload/','/upload/w_144,h_144,c_fill/') %>" alt="Profil fotoğrafı" loading="lazy" data-avatar="<%= targetUser.profileImage %>" style="cursor:pointer;">
+        <% } else { %>
+          <span class="detail-avatar-fallback<%= targetUser.role === 'admin' ? ' detail-avatar-fallback-admin' : '' %>"><%= targetUser.username.charAt(0).toUpperCase() %></span>
+        <% } %>
+        <div class="detail-avatar-info">
+          <strong><%= targetUser.username %><% if (targetUser.role === 'admin') { %><span class="admin-tick" title="Doğrulanmış Admin" aria-label="Doğrulanmış Admin"><span class="admin-tick-outer" aria-hidden="true"><svg viewBox="0 0 100 100" class="admin-tick-gear" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M98 50 L79.42 55.85 L94.35 68.37 L74.94 66.67 L83.94 83.94 L66.67 74.94 L68.37 94.35 L55.85 79.42 L50 98 L44.15 79.42 L31.63 94.35 L33.33 74.94 L16.06 83.94 L25.06 66.67 L5.65 68.37 L20.58 55.85 L2 50 L20.58 44.15 L5.65 31.63 L25.06 33.33 L16.06 16.06 L33.33 25.06 L31.63 5.65 L44.15 20.58 L50 2 L55.85 20.58 L68.37 5.65 L66.67 25.06 L83.94 16.06 L74.94 33.33 L94.35 31.63 L79.42 44.15 Z"/></svg></span><span class="admin-tick-inner"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.2 12.4l2.8 2.8 5.8-5.8" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><% } else { %> <span class="role-dot role-dot-user" title="user"></span><% } %></strong>
+          <span><%= targetUser.profileImage ? 'Profil fotoğrafı yüklü' : 'Profil fotoğrafı yok' %></span>
+        </div>
+      </div>
+
+      <% if (targetUser.deletedAt) { %>
+        <p style="font-size:14px;color:var(--ink-soft);">Bu kullanıcı silinmiş durumda, bilgileri düzenlenemez.</p>
+      <% } else { %>
+        <%
+        const formVal = (name, fallback) => (locals.flash && locals.flash.oldInput && locals.flash.oldInput[name] !== undefined) ? locals.flash.oldInput[name] : fallback;
+        const fieldErr = (name) => (locals.flash && locals.flash.errors && locals.flash.errors[name]) ? locals.flash.errors[name] : null;
+        %>
+        <form action="/admin/kullanicilar/<%= targetUser.id %>" method="POST" autocomplete="off">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="form-group">
+            <label for="f-id">ID</label>
+            <input type="text" id="f-id" value="<%= targetUser.id %>" readonly>
+          </div>
+          <div class="form-group">
+            <label for="f-email">E-posta</label>
+            <input type="email" id="f-email" name="email" value="<%= formVal('email', targetUser.email) %>" maxlength="50" required>
+            <% if (fieldErr('email')) { %><div class="field-error"><%= fieldErr('email') %></div><% } %>
+          </div>
+          <div class="form-group">
+            <label for="f-username">Kullanıcı adı</label>
+            <input type="text" id="f-username" name="username" value="<%= formVal('username', targetUser.username) %>" maxlength="50" required>
+            <% if (fieldErr('username')) { %><div class="field-error"><%= fieldErr('username') %></div><% } %>
+          </div>
+          <div class="form-group">
+            <label for="f-role">Rol</label>
+            <select id="f-role" name="role">
+              <option value="user" <%= formVal('role', targetUser.role) === 'user' ? 'selected' : '' %>>user</option>
+              <option value="admin" <%= formVal('role', targetUser.role) === 'admin' ? 'selected' : '' %>>admin</option>
+            </select>
+            <% if (fieldErr('role')) { %><div class="field-error"><%= fieldErr('role') %></div><% } %>
+          </div>
+          <div class="check-row">
+            <input type="checkbox" id="f-banned" name="banned" value="on" <%= formVal('banned', targetUser.banned) ? 'checked' : '' %>>
+            <label for="f-banned">Banlı</label>
+          </div>
+          <% if (fieldErr('banned')) { %><div class="field-error" style="margin:-4px 0 10px;"><%= fieldErr('banned') %></div><% } %>
+          <div class="form-group">
+            <label for="f-ip">IP</label>
+            <input type="text" id="f-ip" name="ip" value="<%= formVal('ip', targetUser.ip || '') %>" maxlength="45" required>
+            <% if (fieldErr('ip')) { %><div class="field-error"><%= fieldErr('ip') %></div><% } %>
+          </div>
+          <div class="form-group">
+            <label for="f-userAgent">User-Agent</label>
+            <input type="text" id="f-userAgent" name="userAgent" value="<%= formVal('userAgent', targetUser.userAgent || '') %>" maxlength="255" required>
+            <% if (fieldErr('userAgent')) { %><div class="field-error"><%= fieldErr('userAgent') %></div><% } %>
+          </div>
+          <div class="form-group">
+            <label for="f-createdAt">Kayıt tarihi</label>
+            <input type="text" id="f-createdAt" value="<%= new Date(targetUser.createdAt).toLocaleString("tr-TR") %>" readonly>
+          </div>
+
+          <button type="submit" class="btn btn-solid auth-btn">Kaydet</button>
+        </form>
+      <% } %>
+    </div>
+
+    <div class="manage-section">
+      <h2>Paylaştığı Konular (<%= posts.length %>)</h2>
+      <p class="section-sub">Kullanıcının açtığı forum konuları</p>
+      <% if (posts.length > 0) { %>
+        <div class="job-list">
+          <% posts.forEach(function(p) { %>
+            <div class="job-card">
+              <div class="job-info">
+                <strong><a href="/forum/konu/<%= p.id %>"><%= p.title %></a></strong>
+                <span><%= p.PostCategory ? p.PostCategory.name : '—' %> · <%= new Date(p.createdAt).toLocaleDateString("tr-TR") %> · <%= p.likes %> beğeni</span>
+              </div>
+              <div class="job-actions">
+                <a class="btn btn-ghost" href="/forum/konu/<%= p.id %>">Görüntüle</a>
+                <form method="post" action="/admin/konu-sil/<%= p.id %>" style="display:inline;margin:0;" data-confirm="Bu konuyu silmek istediğinize emin misiniz?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn-delete">Sil</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty-manage">Bu kullanıcı henüz konu açmamış.</div>
+      <% } %>
+    </div>
+
+    <div class="manage-section">
+      <h2>Yanıt Verdiği Konular (<%= repliedPosts.length %>)</h2>
+      <p class="section-sub">Kullanıcının yanıt yazdığı konular (tekrarlar birleştirildi)</p>
+      <% if (repliedPosts.length > 0) { %>
+        <div class="job-list">
+          <% repliedPosts.forEach(function(p) { %>
+            <div class="job-card">
+              <div class="job-info">
+                <strong><a href="/forum/konu/<%= p.id %>"><%= p.title %></a></strong>
+                <span><%= p.PostCategory ? p.PostCategory.name : '—' %> · <%= replyCountByPost[p.id] %> yanıt yazdı · Konu sahibi: <%= p.User ? p.User.username : '—' %></span>
+              </div>
+              <div class="job-actions">
+                <a class="btn btn-ghost" href="/forum/konu/<%= p.id %>">Görüntüle</a>
+                <form method="post" action="/admin/kullanicilar/<%= targetUser.id %>/yanit-sil/<%= p.id %>" style="display:inline;margin:0;" data-confirm="Bu kullanıcının bu konudaki <%= replyCountByPost[p.id] %> yanıtı silinecek. Emin misiniz?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button type="submit" class="btn-delete">Yanıtları Sil (<%= replyCountByPost[p.id] %>)</button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty-manage">Bu kullanıcı henüz yanıt vermemiş.</div>
+      <% } %>
+    </div>
+  </div>
+
+  <div id="avatar-overlay" class="avatar-overlay" style="display:none;"></div>
+  <div id="avatar-popup" class="avatar-popup" style="display:none;">
+    <div class="avatar-popup-inner">
+      <img id="avatar-popup-img" src="" alt="" loading="lazy">
+    </div>
+  </div>
+
+  <%- include('../partials/footer') %>
+
+</body>
+</html>

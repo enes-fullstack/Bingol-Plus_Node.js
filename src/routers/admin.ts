@@ -19,8 +19,11 @@ router.get("/admin/loglar", generalLimiter, requireAdmin, adminController.logsGe
 router.post("/admin/log-sil/:id", requireAdmin, adminLimiter, adminController.logDeletePost);
 router.post("/admin/loglar/sil", requireAdmin, adminLimiter, adminController.logsDeleteAllPost);
 router.get("/admin/kullanicilar", generalLimiter, requireAdmin, adminController.usersGet);
+router.get("/admin/kullanicilar/:id", generalLimiter, requireAdmin, adminController.userDetailGet);
+router.post("/admin/kullanicilar/:id", requireAdmin, adminLimiter, adminController.userDetailPost);
 router.post("/admin/kullanici-sil/:id", requireAdmin, adminLimiter, adminController.userDeletePost);
 router.post("/admin/kullanici-ban/:id", requireAdmin, adminLimiter, adminController.userBanPost);
+router.post("/admin/kullanicilar/:id/yanit-sil/:postId", requireAdmin, adminLimiter, adminController.userRepliesDeletePost);
 router.post("/admin/konu-sil/:postId", requireAdmin, adminLimiter, adminController.topicDeletePost);
 router.get("/admin/forum", generalLimiter, requireAdmin, adminController.forumManageGet);
 router.post("/admin/yanit-sil/:id", requireAdmin, adminLimiter, adminController.replyDeletePost);

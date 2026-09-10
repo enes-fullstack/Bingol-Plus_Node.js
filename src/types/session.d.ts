@@ -4,7 +4,7 @@ interface FlashMessage {
     type: "success" | "error" | "warning";
     message: string;
     errors?: Record<string, string>;
-    oldInput?: Record<string, string>;
+    oldInput?: Record<string, string | boolean>;
 }
 
 declare module "express-session" {

@@ -17,7 +17,7 @@ import { sequelize } from "../database/connection.js";
 import { destroyUserSessions } from "../config/session.js";
 import { sendJobNotification } from "../services/mail.js";
 import { success, error } from "../log/logger.js";
-import { validateJobForm } from "../helpers/validation.js";
+import { validateJobForm, validateEmail, validateUsername, isReservedUsername } from "../helpers/validation.js";
 import { slugify } from "../helpers/slug.js";
 import { normalizeError } from "../helpers/normalizeError.js";
 
@@ -386,6 +386,13 @@ export const usersGet = async (req: Request, res: Response): Promise<void> => {
 
     const totalPages = Math.ceil(count / limit);
 
+    const [statsTotal, statsActive, statsBanned, statsDeleted] = await Promise.all([
+        User.count({ paranoid: false }),
+        User.count({ where: { banned: false } }),
+        User.count({ where: { banned: true } }),
+        User.count({ where: { deletedAt: { [Op.not]: null } } as unknown as Record<string, unknown>, paranoid: false })
+    ]);
+
     let username: string | null = null;
     if (req.session.userId) {
         const user = await User.findByPk(req.session.userId, { attributes: ["username"] });
@@ -396,6 +403,11 @@ export const usersGet = async (req: Request, res: Response): Promise<void> => {
         users,
         page,
         totalPages,
+        totalUsers: count,
+        statsTotal,
+        statsActive,
+        statsBanned,
+        statsDeleted,
         search,
         username,
         userId: req.session.userId || null
@@ -486,16 +498,186 @@ export const userDeletePost = async (req: Request, res: Response): Promise<void>
     }
 };
 
+export const userDetailGet = async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) { res.redirect("/admin/kullanicilar"); return; }
+
+    const targetUser = await User.findByPk(id, { paranoid: false });
+    if (!targetUser) { res.status(404).render("user/error"); return; }
+
+    const [posts, replies] = await Promise.all([
+        Post.findAll({
+            where: { userId: id },
+            include: [{ model: PostCategory, attributes: ["id", "name", "slug"] }],
+            order: [["createdAt", "DESC"]],
+            limit: 50
+        }),
+        PostReply.findAll({ where: { userId: id }, attributes: ["postId"] })
+    ]);
+
+    const replyCountByPost: Record<number, number> = {};
+    for (const reply of replies) {
+        replyCountByPost[reply.postId] = (replyCountByPost[reply.postId] || 0) + 1;
+    }
+    const repliedIds = Object.keys(replyCountByPost).map(Number);
+
+    let repliedPosts: Post[] = [];
+    if (repliedIds.length > 0) {
+        repliedPosts = await Post.findAll({
+            where: { id: repliedIds },
+            include: [
+                { model: PostCategory, attributes: ["id", "name", "slug"] },
+                { model: User, attributes: ["id", "username"] }
+            ],
+            order: [["createdAt", "DESC"]]
+        });
+    }
+
+    let username: string | null = null;
+    if (req.session.userId) {
+        const user = await User.findByPk(req.session.userId, { attributes: ["username"] });
+        if (user) username = user.username;
+    }
+
+    res.status(200).render("admin/user-detail", {
+        targetUser,
+        posts,
+        repliedPosts,
+        replyCountByPost,
+        username,
+        userId: req.session.userId || null
+    });
+};
+
+export const userDetailPost = async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!id || isNaN(id)) { res.redirect("/admin/kullanicilar"); return; }
+
+    try {
+        const target = await User.findByPk(id, { paranoid: false });
+        if (!target) {
+            req.session.flash = { type: "error", message: "Kullanıcı bulunamadı." };
+            res.redirect("/admin/kullanicilar");
+            return;
+        }
+        if (target.deletedAt) {
+            req.session.flash = { type: "error", message: "Silinmiş kullanıcı düzenlenemez." };
+            res.redirect(`/admin/kullanicilar/${id}`);
+            return;
+        }
+
+        const body = req.body as Record<string, unknown>;
+        const emailRaw = typeof body.email === "string" ? body.email.trim() : "";
+        const usernameRaw = typeof body.username === "string" ? body.username.trim() : "";
+        const roleRaw = typeof body.role === "string" ? body.role : "";
+        const bannedRaw = body.banned === "on" || body.banned === "true" || body.banned === true;
+        const ipRaw = typeof body.ip === "string" ? body.ip.trim() : "";
+        const userAgentRaw = typeof body.userAgent === "string" ? body.userAgent.trim() : "";
+        const oldInput = { email: emailRaw, username: usernameRaw, role: roleRaw, banned: bannedRaw, ip: ipRaw, userAgent: userAgentRaw };
+
+        const errors: Record<string, string> = {};
+        if (!validateEmail(emailRaw) || emailRaw.length < 10 || emailRaw.length > 50) {
+            errors.email = "Geçerli bir e-posta giriniz (10-50 karakter).";
+        }
+        if (!validateUsername(usernameRaw)) {
+            errors.username = "Kullanıcı adı 2-50 karakter olmalı (harf, rakam, _ ve -).";
+        } else if (isReservedUsername(usernameRaw)) {
+            errors.username = "Bu kullanıcı adı kullanılamaz.";
+        }
+        if (roleRaw !== "user" && roleRaw !== "admin") {
+            errors.role = "Rol seçiniz.";
+        }
+        if (!ipRaw || ipRaw.length > 45) {
+            errors.ip = "Geçerli bir IP giriniz (en fazla 45 karakter).";
+        }
+        if (!userAgentRaw || userAgentRaw.length > 255) {
+            errors.userAgent = "User-Agent en fazla 255 karakter olabilir.";
+        }
+
+        const isSelf = id === req.session.userId;
+        if (!errors.role && roleRaw !== target.role) {
+            if (isSelf) {
+                errors.role = "Kendi rolünüzü buradan değiştiremezsiniz.";
+            } else if (target.role === "admin") {
+                errors.role = "Admin kullanıcıların rolü değiştirilemez.";
+            }
+        }
+        if (bannedRaw !== target.banned) {
+            if (isSelf) {
+                errors.banned = "Kendi ban durumunuzu buradan değiştiremezsiniz.";
+            } else if (target.role === "admin") {
+                errors.banned = "Admin kullanıcıları banlanamaz.";
+            }
+        }
+
+        if (Object.keys(errors).length > 0) {
+            req.session.flash = { type: "error", message: "Lütfen aşağıdaki hataları düzeltin.", errors, oldInput };
+            res.redirect(`/admin/kullanicilar/${id}`);
+            return;
+        }
+
+        if (emailRaw !== target.email) {
+            const emailTaken = await User.findOne({ where: { email: emailRaw }, attributes: ["id"], paranoid: false });
+            if (emailTaken && emailTaken.id !== target.id) {
+                req.session.flash = { type: "error", message: "Bu e-posta başka bir kullanıcı tarafından kullanılıyor.", errors: { email: "Bu e-posta başka bir kullanıcı tarafından kullanılıyor." }, oldInput };
+                res.redirect(`/admin/kullanicilar/${id}`);
+                return;
+            }
+        }
+        if (usernameRaw !== target.username) {
+            const usernameTaken = await User.findOne({ where: { username: usernameRaw }, attributes: ["id"], paranoid: false });
+            if (usernameTaken && usernameTaken.id !== target.id) {
+                req.session.flash = { type: "error", message: "Bu kullanıcı adı başka bir kullanıcı tarafından kullanılıyor.", errors: { username: "Bu kullanıcı adı başka bir kullanıcı tarafından kullanılıyor." }, oldInput };
+                res.redirect(`/admin/kullanicilar/${id}`);
+                return;
+            }
+        }
+
+        const wasBanned = target.banned;
+        await target.update({
+            email: emailRaw,
+            username: usernameRaw,
+            role: roleRaw as "user" | "admin",
+            banned: bannedRaw,
+            ip: ipRaw,
+            userAgent: userAgentRaw
+        });
+
+        if (!wasBanned && bannedRaw) {
+            await destroyUserSessions(target.id);
+        }
+
+        success(`Kullanıcı güncellendi (ID: ${id})`);
+        req.session.flash = { type: "success", message: `"${usernameRaw}" kullanıcısının bilgileri güncellendi.` };
+        res.redirect(`/admin/kullanicilar/${id}`);
+    } catch (err) {
+        console.log("Error Code:", 3005);
+        error(`Kullanıcı güncellenirken hata (ID: ${id}): ${normalizeError(err)}`);
+        const message = err instanceof Error && err.name === "SequelizeUniqueConstraintError"
+            ? "E-posta veya kullanıcı adı zaten kullanımda."
+            : "Kullanıcı güncellenirken bir hata oluştu.";
+        req.session.flash = { type: "error", message };
+        res.redirect(`/admin/kullanicilar/${id}`);
+    }
+};
+
 export const topicDeletePost = async (req: Request, res: Response): Promise<void> => {
     const postId = Number(req.params.postId);
 
-    if (!postId || isNaN(postId)) {
+    const redirectBack = (): void => {
         const referer = (req.headers.referer || "") as string;
-        if (referer.includes("/admin/forum")) {
+        const userDetailMatch = referer.match(/\/admin\/kullanicilar\/(\d+)/);
+        if (userDetailMatch) {
+            res.redirect(`/admin/kullanicilar/${userDetailMatch[1]}`);
+        } else if (referer.includes("/admin/forum")) {
             res.redirect("/admin/forum");
         } else {
             res.redirect("/forum");
         }
+    };
+
+    if (!postId || isNaN(postId)) {
+        redirectBack();
         return;
     }
 
@@ -506,22 +688,34 @@ export const topicDeletePost = async (req: Request, res: Response): Promise<void
         await Post.destroy({ where: { id: postId } });
 
         req.session.flash = { type: "success", message: "Konu başarıyla silindi." };
-        const referer = (req.headers.referer || "") as string;
-        if (referer.includes("/admin/forum")) {
-            res.redirect("/admin/forum");
-        } else {
-            res.redirect("/forum");
-        }
+        redirectBack();
     } catch (err) {
         console.log("Error Code:", 4011);
         error(`Konu silinirken hata (post ID: ${postId}): ${normalizeError(err)}`);
         req.session.flash = { type: "error", message: "Konu silinirken bir hata oluştu." };
-        const referer = (req.headers.referer || "") as string;
-        if (referer.includes("/admin/forum")) {
-            res.redirect("/admin/forum");
+        redirectBack();
+    }
+};
+
+export const userRepliesDeletePost = async (req: Request, res: Response): Promise<void> => {
+    const id = Number(req.params.id);
+    const postId = Number(req.params.postId);
+    if (!id || isNaN(id) || !postId || isNaN(postId)) { res.redirect("/admin/kullanicilar"); return; }
+
+    try {
+        const count = await PostReply.destroy({ where: { postId, userId: id } });
+        if (count === 0) {
+            req.session.flash = { type: "error", message: "Silinecek yanıt bulunamadı." };
         } else {
-            res.redirect("/forum");
+            success(`Kullanıcının yanıtları silindi (kullanıcı ID: ${id}, post ID: ${postId}, adet: ${count})`);
+            req.session.flash = { type: "success", message: `${count} yanıt başarıyla silindi.` };
         }
+        res.redirect(`/admin/kullanicilar/${id}`);
+    } catch (err) {
+        console.log("Error Code:", 4012);
+        error(`Kullanıcı yanıtları silinirken hata (kullanıcı ID: ${id}, post ID: ${postId}): ${normalizeError(err)}`);
+        req.session.flash = { type: "error", message: "Yanıtlar silinirken bir hata oluştu." };
+        res.redirect(`/admin/kullanicilar/${id}`);
     }
 };
 

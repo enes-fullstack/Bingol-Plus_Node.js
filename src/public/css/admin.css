@@ -205,12 +205,11 @@
   .search-bar button { flex: none; }
   .search-bar a { flex: none; }
 
+  /* Tablo yapısı korunur — hiçbir sütun gizlenmez, taşan kısım yatay kaydırılır */
+  .user-table { min-width: 760px; }
   .user-table th,
   .user-table td { padding: 8px 10px; font-size: 12px; }
-  .user-table th:nth-child(4),
-  .user-table td:nth-child(4),
-  .user-table th:nth-child(5),
-  .user-table td:nth-child(5) { display: none; }
+  .user-table td.cell-ip { max-width: none !important; overflow: visible !important; text-overflow: clip !important; }
 
   .user-avatar-sm { width: 24px; height: 24px; }
   .user-initial { width: 24px; height: 24px; font-size: 11px; }
@@ -223,8 +222,6 @@
 @media (max-width: 480px) {
   .user-table th,
   .user-table td { padding: 6px 8px; font-size: 11px; }
-  .user-table th:nth-child(3),
-  .user-table td:nth-child(3) { display: none; }
 }
 
 /* ---------- LOGS RESPONSIVE ---------- */
